@@ -23,36 +23,36 @@ function derivOut = firstDeriv(u,dir,h,use)
 	
 	% find dimensions of input data iX, iY
 	sizeInput = size(u);
-                    iX = sizeInput(1); iY = sizeInput(2); 
+	iX = sizeInput(1); iY = sizeInput(2); 
                     
-                    % declare dimensions of output data oX, oY
-                    % lower limits of derivative data lX,lY
-                    % and upper limits of derivative data uX,uY
-                    if or(strcmp(use,'advU'),  strcmp(use,'pU')) % input data is NxN, output data is N+1 x N
-                    	oX = iX+1; oY = iY; 
-                    	lX=2; lY=2;
-                    	uX = iX; uY = iY;
-                    elseif or(strcmp(use,'advV'), strcmp(use,'pV')) % input data is NxN, output data is N x N+1
-                    	oX = iX; oY = iY+1;
-                    	lX=2; lY=2;
-                    	uX = iX; uY = iY;
-                    elseif strcmp(use,'divU') % input data is N+1 x N, output data is NxN
-                    	oX = iX-1; oY = iY;
-                    	lX=1;lY=2;
-                    	uX = oX; uY = oY;
-                    elseif strcmp(use,'divV') % input data is N x N+1, output data is NXN
-                    	oX = iX; oY = iY-1;
-                    	lX=2; lY=1;
-                    	uX = oX; uY = oY;
-                    endif
-                    derivOut = zeros(oX,oY);
-                    
-                    % take a derivative
-                    if dir==1 % d/dx
-                    	derivOut(lX:uX,1:uY) = (u(2:end,:)-u(1:end-1,:))/h(1);
-                    elseif dir==2 % d/dy
-                    	derivOut(1:uX,lY:uY) = (u(:,2:end)-u(:,1:end-1))/h(2);
-                    endif
+	% declare dimensions of output data oX, oY
+	% lower limits of derivative data lX,lY
+	% and upper limits of derivative data uX,uY
+	if or(strcmp(use,'advU'),  strcmp(use,'pU')) % input data is NxN, output data is N+1 x N
+		oX = iX+1; oY = iY; 
+		lX=2; lY=2;
+		uX = iX; uY = iY;
+	elseif or(strcmp(use,'advV'), strcmp(use,'pV')) % input data is NxN, output data is N x N+1
+		oX = iX; oY = iY+1;
+		lX=2; lY=2;
+		uX = iX; uY = iY;
+	elseif strcmp(use,'divU') % input data is N+1 x N, output data is NxN
+		oX = iX-1; oY = iY;
+		lX=1;lY=2;
+		uX = oX; uY = oY;
+	elseif strcmp(use,'divV') % input data is N x N+1, output data is NXN
+		oX = iX; oY = iY-1;
+		lX=2; lY=1;
+		uX = oX; uY = oY;
+	endif
+	derivOut = zeros(oX,oY);
+
+	% take a derivative
+	if dir==1 % d/dx
+		derivOut(lX:uX,1:uY) = (u(2:end,:)-u(1:end-1,:))/h(1);
+	elseif dir==2 % d/dy
+		derivOut(1:uX,lY:uY) = (u(:,2:end)-u(:,1:end-1))/h(2);
+	endif
                    		
 endfunction
 

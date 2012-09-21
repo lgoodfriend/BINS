@@ -122,6 +122,6 @@ function [A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC)
 				A(Midx, m(i,N2-1) ) = 1; 
 			endif
 		endif
-	endfor
+	endfor % loop over rows in matrix A
 	
 endfunction

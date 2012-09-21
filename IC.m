@@ -5,12 +5,12 @@ function [u,v,p] = IC(L,N,ng,IC_choice)
 	%
 	% staggered grid means u and v are offset:
 	%  ______________
-	% |                        |
-	% |                        |
-	% |                        |
-	% |->u      p          |
-	% |                        |
-	% |           ^ v       |
+	% |                             |
+	% |                             |
+	% |                             |
+	% |->u      p              |
+	% |                             |
+	% |              ^ v         |
 	% |_______|______|
 	%
 	u = zeros(N(1)+2*ng+1, N(2)+2*ng);

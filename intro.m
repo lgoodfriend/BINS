@@ -1,5 +1,9 @@
 % introduce BINS and its use
 
+% open access to functions defined in larger files
+advance
+calculus 
+
 % choose parameters for this solution
 N = [20 20]; % N = number of cells in x and y (2x1 array)
 L = [2*pi 2*pi]; % L = physical dimension in x and y (2x1 array)

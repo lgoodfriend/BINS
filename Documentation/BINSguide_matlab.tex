@@ -28,9 +28,38 @@ The Basic Incompressible Navier-Stokes (BINS) solver is designed to be an educat
 
 BINS is written in Matlab/Octave, so you will need one of those interpreters to run the code.  Octave is a free, open-source language that is very similar to Matlab.  You can learn about it at \texttt{www.gnu.org/software/octave}.
 
-The first step is to download the code tarball from \texttt{GitHub?}.  After you've downloaded and untarred the tarball, you should see a folder with a bunch of files in it.  The key file for getting started is \texttt{intro.m}.
+The first step is to download the code tarball from \[ \texttt{https://github.com/lgoodfriend/BINS/downloads}\]  After you've downloaded and untarred the tarball, you should see a folder with a bunch of files in it.  The key file for getting started is \texttt{intro.m}.
 
-Start a Matlab/Octave session and type \texttt{intro} at the prompt.
+Start a Matlab/Octave session and type \texttt{intro} at the prompt.  You should see two figures appear (Figure~\ref{}).  These represent the solution to the Taylor-Green vortex after 1 second.
+
+\subsection{Changing the domain}
+The domain size is controlled by \texttt{N} and \texttt{L}.  \texttt{N} sets the number of cells in each direction, and \texttt{L} sets the physical length of each dimension.
+
+\subsection{Changing the boundary conditions}
+The boundary conditions are controlled by \texttt{BC}.  \texttt{BC} is a vector with entries corresponding to tags marking the choice of boundary condition:
+\[ \texttt{BC} = [\mathrm{lower \hspace{2pt} x, upper\hspace{2pt} x, lower\hspace{2pt} y, upper\hspace{2pt} y} ]\]
+
+BINS has two kinds of boundary conditions
+\begin{itemize}
+\item periodic
+\item moving, impermeable, no-slip wall
+\end{itemize}
+
+The periodic boundary conditions are tagged with $\sqrt{-1}$, and the wall boundary conditions are tagged with the velocity of the wall.  Thus, if you wanted an all periodic domain, you would set
+\[ \texttt{BC = [sqrt(-1),sqrt(-1),sqrt(-1),sqrt(-1)]}\]
+If you wanted the $x$ boundaries to be periodic, with fixed walls on the $y$ boundaries (making an infinite channel), you would set
+\[ \texttt{BC = [sqrt(-1),sqrt(-1),0,0]}\]
+If you wanted to make a cavity forced by a lid moving at speed $U$ on the upper $y$ boundary, you would set
+\[ \texttt{BC = [0,0,0,U]}\]
+
+\subsection{Changing the initial condition}
+The initial condition is controlled by \texttt{IC\_choice}, which indexes to an initial condition listed in \texttt{IC.m}.  The available initial conditions are 
+\begin{enumerate}
+\item $u$ = 0, $v$ = 0, $p$ = 0
+\item $u$ = 1, $v$ = 1, $p$ = 0
+\item Taylor-Green vortex
+\end{enumerate}
+You can add a new initial condition by editing \texttt{IC.m} to include the initial condition you would like.  If you are setting a new initial condition, it is important to understand how the staggered grid is set up (see section~\ref{staggeredGrid}).
 
 %----------------------------------------------------------------------
 \section{Underlying mathematics}
@@ -123,10 +152,12 @@ time step & $\frac{\partial u_i}{\partial t}$ & \texttt{predict}& \texttt{advanc
 \subsubsection{Spatial derivatives}
 To solve the Navier-Stokes equation, we need to calculate first and second derivatives.  BINS uses centered finite differences for all these calculations.  First derivatives are approximated as
 \begin{equation}
-\frac{\partial u_i}{\partial x} = \frac{u_{i+1} - u_{i-1}}{\Delta x}
+\label{firstDeriv}
+\frac{\partial u_i}{\partial x} = \frac{u_{i+1} - u_{i}}{\Delta x}
 \end{equation}
 and second derivatives as
 \begin{equation}
+\label{secondDeriv}
 \frac{\partial^2 u}{\partial x^2} = \frac{u_{i+1} -2 u_i + u_{i+1}}{\Delta x^2}
 \end{equation}
 Subroutines to calculate spatial derivatives are found in the file \texttt{calculus.m}.
@@ -142,8 +173,6 @@ second derivative & $\frac{\partial^2 u}{\partial x^2}$ & \texttt{secondDeriv} &
 \hline 
 \end{tabular} 
 \end{center}
-
-\subsection{Boundary conditions}
 
 \subsection{Solving the Poisson equation}
 As we saw in section~\ref{mathBasics}, we must solve a Poisson equation to find the pressure at the next timestep (equation~\ref{poisson}):
@@ -183,10 +212,9 @@ For all the other points, we know some information, but other information must b
 0&0&0&0&0&1&0&1&-4\\ \end{array} \right] \left[ \begin{array}{c} p_{11}\\p_{12}\\p_{13}\\p_{21}\\p_{22}\\p_{23}\\p_{31}\\p_{32}\\p_{33}\\ \end{array}\right] = \left[ \begin{array}{c} f_{11}\\f_{12}\\f_{13}\\f_{21}\\f_{22}\\f_{23}\\f_{31}\\f_{32}\\f_{33}\\ \end{array}\right]
 \]
 
-This matrix equation is incorrect because it does not enforce boundary conditions\footnote{In fact, it does not form a true finite difference approximation to derivatives, since the rows do not all sum to 1.}. For all but the center point, we need boundary conditions to calculate the laplacian.  
+This matrix equation is incorrect because it does not enforce boundary conditions\footnote{In fact, it does not form a true finite difference approximation to derivatives, since the rows do not all sum to 1.}. For all but the center point, we need boundary conditions to calculate the Laplacian.  
 
-\subsubsection{Periodic boundary conditions}
-If the boundary conditions are periodic, then $p_{12}$ is adjacent to $p_{32}$, so the matrix is
+For example, if the boundary conditions are periodic (see section~\ref{periodicBCs}), then $p_{12}$ is adjacent to $p_{32}$, $p_{21}$ is adjacent to $p_{23}$, etc.  Then the matrix is
 \[ \left[ \begin{array}{c c c c c c c c c} 
 -4&1&1&1&0&0&1&0&0\\ 
 1&-4&1&0&1&0&0&1&0\\ 
@@ -198,8 +226,65 @@ If the boundary conditions are periodic, then $p_{12}$ is adjacent to $p_{32}$, 
 0&1&0&0&1&0&1&-4&1\\ 
 0&0&1&0&0&1&1&1&-4\\ \end{array} \right] \left[ \begin{array}{c} p_{11}\\p_{12}\\p_{13}\\p_{21}\\p_{22}\\p_{23}\\p_{31}\\p_{32}\\p_{33}\\ \end{array}\right] = \left[ \begin{array}{c} f_{11}\\f_{12}\\f_{13}\\f_{21}\\f_{22}\\f_{23}\\f_{31}\\f_{32}\\f_{33}\\ \end{array}\right]
 \]
+We can then solve for the pressure by solving this matrix equation
+\[ Ap = f\]
+which has solution
+\[ p = A^{-1}f\]
+In BINS, the matrix $A$ and vector $f$ are formed in \texttt{make\_matrix.m}, and the solution is found in \texttt{solvePoisson.m}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline 
+\bf{Component} & \bf{Math} & \bf{Function} & \bf{File}\\ 
+\hline 
+matrix defining Laplacian & $A$ & \texttt{make\_matrix} & \texttt{make\_matrix.m}\\ 
+\hline 
+vector defining Poisson forcing & $f$ & \texttt{make\_matrix} & \texttt{make\_matrix.m}\\ 
+\hline 
+solution to Poisson equation & $p = A^{-1}f$ & \texttt{solvePoisson} & \texttt{solvePoisson.m}\\ 
+\hline 
+\end{tabular} 
+\end{center}
 
-\subsubsection{Wall boundary conditions}
+\subsubsection{Inverting a matrix}
+Solving the Poisson equation requires inverting a matrix.  Gaussian elimination can invert a matrix, but this algorithm is expensive, in that it takes a lot of computational time.  Many shortcuts have been developed to invert matrices quickly.  These shortcuts often do not solve the inversion exactly, which is ok, because we are only approximating the solution to the Navier-Stokes equations anyway.
+
+This version of BINS uses Matlab/Octave's built in matrix inversion function \texttt{backslash}, also written ``\textbackslash''.  This is admittedly a crutch, but it's a very nice crutch.  Both Matlab and Octave have sparse matrix functions built in, which makes inverting sparse matrices like $A$ very fast.  Solving the Poisson equation is usually the slowest part of a Navier-Stokes solver.
+
+%----------------------------------------------------------------------
+\section{Specifics of the computation}
+%----------------------------------------------------------------------
+\subsection{Staggered grid}
+\label{staggeredGrid}
+In a standard numerical grid, all the variables are located at cell centers (Figure~\ref{}).  This arrangement is simple to code, but it is not commonly used in Navier-Stokes solvers.  A staggered grid (Figure~\ref{}) is more natural for solving the Navier-Stokes equation, because it increases the order of accuracy of the spatial derivatives involved in solving for the pressure\footnote{This is an oversimplification.  If you want to know the details, look at F\&P}.
+
+\subsection{Boundary conditions}
+When we want to calculate a first derivative of $u_j$ ($u$ at spatial point $j$), we require $u_{j+1}$.  If $u_j$ is on an upper boundary, we need to know what to use for $u_{j+1}$ in equation~\ref{firstDeriv}.  The same is true for calculating a second derivative in equation~\ref{secondDeriv}.
+
+BINS uses two kinds of boundary conditions: periodic and moving wall.  Boundary conditions are implemented using "ghost cells" (Figure~\ref{ghostcells}).  Ghost cells are points which lie outside the real solution domain, but are needed to calculate derivatives at the boundaries.  The solution is calculated on the inner domain, and then ghost cells are filled so that derivatives can be taken in the next time step.  Boundary conditions are enforced in \texttt{BCfill.m}.
+
+\subsubsection{Periodic boundary condition}
+\label{periodicBCs}
+A periodic boundary condition states that opposite edges of the domain are adjacent (Figure~\ref{torus}).  It is called "periodic" because this boundary condition causes the solution to repeat infinitely, so it becomes periodic with a period equal to the length of the domain.
+
+To implement this boundary condition, the solution at the right edge of the domain is copied to the ghost cells on the left edge of the domain, and vice-versa (Figure~\ref{}).  
+
+\subsubsection{Moving wall boundary condition}
+A moving wall boundary condition states that the boundary is an impermeable wall that is moving parallel to itself (Figure~\ref{}).  It can also be a stationary wall by setting the wall velocity to zero.
+
+Unlike for the periodic boundary condition, the moving wall boundary condition must treat the two velocities and pressure differently (Figure~\ref{}).  The velocity perpendicular to the wall must be zero at the wall, otherwise fluid would be moving into the wall.  The velocity parallel to the wall must be equal to the wall's velocity at the wall to satisfy the no-slip condition.  The derivative of the pressure perpendicular to the wall must be zero at the wall, otherwise the pressure would generate a force moving fluid into the wall.
+
+The way we structured the grid means that we can set the velocity perpendicular to the wall to be equal to zero, because that velocity has a grid point on the wall (Figure~\ref{}).  The velocity parallel to the wall does not have a grid point on the wall, so we need to interpolate. We have chosen to use a linear interpolation, so we require
+\[ \frac{u_1 + u_{\mathrm{ghost}}}{2} = U_{\mathrm{wall}}\]
+which means that
+\begin{equation}
+u_{\mathrm{ghost}} = 2U_{\mathrm{wall}} - u_1
+\end{equation}
+To set the pressure, we use the approximation to the first derivative in equation~\ref{firstDeriv}, and require
+\[ \frac{p_1 - p_{\mathrm{ghost}}}{dx} = 0\]
+which means that
+\begin{equation}
+p_{\mathrm{ghost}} = p_1
+\end{equation}
 
 %----------------------------------------------------------------------
 \section{BINS reference: by function name}

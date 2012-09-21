@@ -2,3 +2,8 @@
 *.odg
 *.mat
 *~~
+*.aux
+*.pdf
+*.log
+*.gz
+*.toc

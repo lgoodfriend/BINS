@@ -1,0 +1,267 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{epstopdf}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{sidecap}
+\usepackage{subfig}
+\usepackage{ulem}
+\usepackage{color}
+\usepackage[dvips,letterpaper,margin=1in]{geometry} %for one inch margins
+\author{Lauren Goodfriend}
+\title{Guide to the BINS educational solver}
+\begin{document}
+\maketitle
+\tableofcontents
+
+%----------------------------------------------------------------------
+\section{Introduction}
+%----------------------------------------------------------------------
+
+The Basic Incompressible Navier-Stokes (BINS) solver is designed to be an educational tool for learning how to solve the incompressible Navier-Stokes equation with finite differences.  A gap exists between the basic numerical methods learned in a numerical partial differential equations class and the complexity of full Navier-Stokes research codes.  BINS is intended to form a bridge for engineering students who have some knowledge of numerical methods, but are unsure how to combine them into a working Navier-Stokes solver.  It may also be useful for students wrestling with an enormous research code for the first time, as a reference for the essential processes underlying most finite difference physical Navier-Stokes solvers.
+
+%----------------------------------------------------------------------
+\section{Getting started}
+%----------------------------------------------------------------------
+
+BINS is written in Matlab/Octave, so you will need one of those interpreters to run the code.  Octave is a free, open-source language that is very similar to Matlab.  You can learn about it at \texttt{www.gnu.org/software/octave}.
+
+The first step is to download the code tarball from \texttt{GitHub?}.  After you've downloaded and untarred the tarball, you should see a folder with a bunch of files in it.  The key file for getting started is \texttt{intro.m}.
+
+Start a Matlab/Octave session and type \texttt{intro} at the prompt.
+
+%----------------------------------------------------------------------
+\section{Underlying mathematics}
+%----------------------------------------------------------------------
+
+\subsection{Solving the Navier-Stokes equation}
+\label{mathBasics}
+
+We want to solve the incompressible Navier-Stokes equation
+\begin{align*}
+  \left. \underbrace{\frac{\partial u_i}{\partial t}}_\textrm{time} +  \underbrace{\frac{\partial u_i u_j}{\partial x_j}}_\textrm{advection} = \underbrace{- \frac{1}{\rho}\frac{\partial p}{\partial x_i}}_\textrm{pressure} + \underbrace{\nu \frac{\partial^2 u_i}{\partial x_j \partial x_j}}_\textrm{diffusion} \right\} &\textrm{momentum conservation} \\
+\left. \frac{\partial u_i}{\partial x_i} = 0 \right\} &\textrm{mass conservation}
+\end{align*}
+
+The code first estimates the solution to the Navier-Stokes equation using only the advection and diffusion terms. 
+\begin{equation}
+ \frac{\partial u_i^*}{\partial t} =   -\frac{\partial u_i^n u_j^n}{\partial x_j} + \nu \frac{\partial^2 u_i^n}{\partial x_j \partial x_j} 
+ \label{predict}
+\end{equation}
+The superscripts $n$ refer to the current, $n^\textrm{th}$ timestep: $u_i^n$ is the $i^\textrm{th}$ component of the velocity at timestep $n$.  The superscript $*$ denotes that the velocity calculated in this step $u^*$ is temporary and doesn't exist at a timestep.
+
+The code then projects the intermediate velocity field $u_i^*$ onto a divergence-free space using the next time step pressure $p^{n+1}$ calculated by
+\begin{equation}
+\nabla^2 p^{n+1} = \frac{1}{\Delta t}\frac{\partial u_i^*}{\partial x_i}
+\label{poisson}
+\end{equation}
+
+Then we can find the new divergence free velocity field $u_i^{n+1}$ 
+
+\begin{equation}
+u_i^{n+1}= u_i^* - \Delta t\frac{\partial p^{n+1}}{\partial x_i}
+\label{correct}
+\end{equation}
+
+since
+\begin{align*}
+\frac{\partial  u_i^{n+1}}{\partial x_i} &= \frac{\partial}{\partial x_i}\left(u_i^* - \Delta t\frac{\partial p^{n+1}}{\partial x_i} \right) \\
+&= \frac{\partial u_i^*}{\partial x_i} - \Delta t\nabla^2p^{n+1} \\
+&= 0 \\
+\end{align*}
+
+These steps appear in the functions in the file \texttt{advance.m}.  In the $\texttt{predict}$ function, the next time step velocity is estimated following equation~\ref{predict}.  This step uses the advection and diffusion terms, calculated in subroutines \texttt{advection} and \texttt{diffusion} respectively.  The poisson equation for pressure in equation~\ref{poisson} is solved in hte function $\texttt{pressure}$.  The next time step velocity is then calculated by correcting the predicted velocity in function \texttt{correct}, as in equation~\ref{correct}.  These steps are outlined below.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline 
+\bf{Component} & \bf{Math} & \bf{Function} & \bf{File}\\ 
+\hline 
+advection term & $\frac{\partial u_i u_j}{\partial x_j}$ & \texttt{advection} & \texttt{advance.m}\\ 
+\hline 
+diffusion term & $\nu \frac{\partial^2 u_i}{\partial x_j \partial x_j}$ & \texttt{diffusion} & \texttt{advance.m} \\ 
+\hline 
+next time step: velocity prediction & $ \frac{\partial u_i^*}{\partial t} =   -\frac{\partial u_i^n u_j^n}{\partial x_j} + \nu \frac{\partial^2 u_i^n}{\partial x_j \partial x_j} $ & \texttt{predict}& \texttt{advance.m} \\ 
+\hline 
+next time step: pressure & $\nabla^2 p^{n+1} = \frac{1}{\Delta t}\frac{\partial u_i^*}{\partial x_i}$ & \texttt{pressure} & \texttt{advance.m}\\ 
+\hline 
+next time step: velocity & $u_i^{n+1}= u_i^* - \Delta t\frac{\partial p^{n+1}}{\partial x_i}$ & \texttt{correct}& \texttt{advance.m} \\ 
+\hline 
+\end{tabular} 
+\end{center}
+
+\subsection{Finite differences}
+
+To approximate a partial differential equation on the computer, we use finite differences to estimate derivatives.  BINS uses second order Adams-Bashforth time stepping and second-order centered differences in space.
+
+\subsubsection{Time stepping}
+The time stepping in BINS is done using forward Euler time stepping.  If we want to approximate 
+\[ \frac{\partial u}{\partial t} = f(u,t) \]
+we use the simple approximation
+\[ \frac{u^{n+1}-u^n}{\Delta t} = f(u^n,t^n)\]
+
+This allows us to calculate $u$ at the next timestep as
+\begin{equation}
+u^{n+1} = u^n + \Delta t f(u^n,t^n)
+\end{equation}
+
+We use these time stepping routines in the \texttt{predict} function to estimate the next time step velocity using the advection and diffusion terms, without accounting for pressure.  So in BINS
+\[ f(u,t) = -\frac{\partial u_i u_j}{\partial x_j} + \nu \frac{\partial^2 u_i}{\partial x_j \partial x_j} \]
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline 
+\bf{Component} & \bf{Math} & \bf{Function} & \bf{File}\\ 
+\hline 
+time step & $\frac{\partial u_i}{\partial t}$ & \texttt{predict}& \texttt{advance.m} \\ 
+\hline 
+\end{tabular} 
+\end{center}
+
+\subsubsection{Spatial derivatives}
+To solve the Navier-Stokes equation, we need to calculate first and second derivatives.  BINS uses centered finite differences for all these calculations.  First derivatives are approximated as
+\begin{equation}
+\frac{\partial u_i}{\partial x} = \frac{u_{i+1} - u_{i-1}}{\Delta x}
+\end{equation}
+and second derivatives as
+\begin{equation}
+\frac{\partial^2 u}{\partial x^2} = \frac{u_{i+1} -2 u_i + u_{i+1}}{\Delta x^2}
+\end{equation}
+Subroutines to calculate spatial derivatives are found in the file \texttt{calculus.m}.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline 
+\bf{Component} & \bf{Math} & \bf{Function} & \bf{File}\\ 
+\hline 
+first derivative & $\frac{\partial u}{\partial x}$ & \texttt{firstDeriv} & \texttt{calculus.m}\\ 
+\hline 
+second derivative & $\frac{\partial^2 u}{\partial x^2}$ & \texttt{secondDeriv} & \texttt{calculus.m}\\ 
+\hline 
+\end{tabular} 
+\end{center}
+
+\subsection{Boundary conditions}
+
+\subsection{Solving the Poisson equation}
+As we saw in section~\ref{mathBasics}, we must solve a Poisson equation to find the pressure at the next timestep (equation~\ref{poisson}):
+\[\nabla^2 p^{n+1} = \frac{1}{\Delta t}\frac{\partial u_i^*}{\partial x_i} \]
+
+Solving a finite difference Poisson equation is actually inverting a matrix.  To see this, we first write the Poisson equation as a finite difference:
+\begin{align*}
+\nabla^2 p^{n+1} &= \frac{1}{\Delta t}\frac{\partial u_i^*}{\partial x_i} \\
+\frac{p_{i+1j}-2p_{ij}+p_{i-1j}}{\Delta x^2} + \frac{p_{ij+1}-2p_{ij}+p_{ij-1}}{\Delta y^2} &= f_{ij}  \\
+\end{align*}
+
+We've dropped the superscripts indicating timestep and written the right hand side as $f_{ij}$.  Remember that we know $f_{ij}$ and we need to solve for $p_{ij}$.  Assuming $\Delta x = \Delta y$,
+\begin{align*}
+\frac{p_{i+1j}-2p_{ij}+p_{i-1j}}{\Delta x^2} + \frac{p_{ij+1}-2p_{ij}+p_{ij-1}}{\Delta x^2} &= f_{ij}  \\
+p_{i+1j}-4p_{ij}+p_{i-1j}+ p_{ij+1}+p_{ij-1} &= \Delta x^2 f_{ij}  \\
+\end{align*}
+
+By transforming the matrix $p_{ij}$ into a vector, we can convert this into a matrix equation.  For example, consider solving the Poisson equation on a $3 \times 3$ grid:
+FIGURE
+
+Write the vector p as
+\[ p^{T} = [p_{11}, p_{12}, p_{13}, p_{21}, p_{22}, p_{23}, p_{13}, p_{23}, p_{33}]\]
+
+The row for $p_{22}$ is the simplest, since only points inside the domain are needed to calculate second derivatives at the central point.
+\[ \left[ \begin{array}{c c c c c c c c c} \\ \\ \\ \\ 0&1&0&1&-4&1&0&1&0 \\ \\ \\ \\ \\ \end{array} \right] \left[ \begin{array}{c} p_{11}\\p_{12}\\p_{13}\\p_{21}\\p_{22}\\p_{23}\\p_{31}\\p_{32}\\p_{33}\\ \end{array}\right] = \left[ \begin{array}{c} f_{11}\\f_{12}\\f_{13}\\f_{21}\\f_{22}\\f_{23}\\f_{31}\\f_{32}\\f_{33}\\ \end{array}\right]
+\]
+For all the other points, we know some information, but other information must be filled in using boundary conditions.  If we just filled in the matrix using the finite difference formula as much as possible, we would find
+\[ \left[ \begin{array}{c c c c c c c c c} 
+-4&1&0&1&0&0&0&0&0\\ 
+1&-4&1&0&1&0&0&0&0\\ 
+0&1&-4&0&0&1&0&0&0\\ 
+1&0&0&-4&1&0&1&0&0\\ 
+0&1&0&1&-4&1&0&1&0 \\ 
+0&0&1&0&1&-4&0&1&0\\ 
+0&0&0&1&0&0&-4&1&0\\ 
+0&0&0&0&1&0&1&-4&1\\ 
+0&0&0&0&0&1&0&1&-4\\ \end{array} \right] \left[ \begin{array}{c} p_{11}\\p_{12}\\p_{13}\\p_{21}\\p_{22}\\p_{23}\\p_{31}\\p_{32}\\p_{33}\\ \end{array}\right] = \left[ \begin{array}{c} f_{11}\\f_{12}\\f_{13}\\f_{21}\\f_{22}\\f_{23}\\f_{31}\\f_{32}\\f_{33}\\ \end{array}\right]
+\]
+
+This matrix equation is incorrect because it does not enforce boundary conditions\footnote{In fact, it does not form a true finite difference approximation to derivatives, since the rows do not all sum to 1.}. For all but the center point, we need boundary conditions to calculate the laplacian.  
+
+\subsubsection{Periodic boundary conditions}
+If the boundary conditions are periodic, then $p_{12}$ is adjacent to $p_{32}$, so the matrix is
+\[ \left[ \begin{array}{c c c c c c c c c} 
+-4&1&1&1&0&0&1&0&0\\ 
+1&-4&1&0&1&0&0&1&0\\ 
+1&1&-4&0&0&1&0&0&1\\ 
+1&0&0&-4&1&1&1&0&0\\ 
+0&1&0&1&-4&1&0&1&0 \\ 
+0&0&1&1&1&-4&0&1&0\\ 
+1&0&0&1&0&0&-4&1&1\\ 
+0&1&0&0&1&0&1&-4&1\\ 
+0&0&1&0&0&1&1&1&-4\\ \end{array} \right] \left[ \begin{array}{c} p_{11}\\p_{12}\\p_{13}\\p_{21}\\p_{22}\\p_{23}\\p_{31}\\p_{32}\\p_{33}\\ \end{array}\right] = \left[ \begin{array}{c} f_{11}\\f_{12}\\f_{13}\\f_{21}\\f_{22}\\f_{23}\\f_{31}\\f_{32}\\f_{33}\\ \end{array}\right]
+\]
+
+\subsubsection{Wall boundary conditions}
+
+%----------------------------------------------------------------------
+\section{BINS reference: by function name}
+%----------------------------------------------------------------------
+This section provides a function-by-function breakdown of the components that make BINS work.
+
+\includegraphics[width=\textwidth]{callGraph.png} 
+
+\subsection{\texttt{advectionTerm}}
+This function estimates the advection term of the Navier Stokes equation.
+
+\subsection{\texttt{BINS}}
+The main function is \texttt{BINS}, located in \texttt{BINS.m}.  It takes...  It calls the functions needed to advance the solution in time.
+
+%----------------------------------------------------------------------
+\section{BINS reference: by filename}
+%----------------------------------------------------------------------
+This section provudes a file-by-file breakdown of the components that make BINS work.
+
+\subsection{\texttt{advance.m}}
+This file contains the functions needed to advance the solution in time.
+
+\subsection{\texttt{BINS.m}}
+This file contains only one function, \texttt{BINS}, the main function of BINS.
+
+%----------------------------------------------------------------------
+\section{Known limitations/bugs}
+%----------------------------------------------------------------------
+
+
+%----------------------------------------------------------------------
+\section{Validation}
+%----------------------------------------------------------------------
+We have validated BINS using the Taylor-Green vortex.  This solution is excellent for validating 2D, incompressible Navier-Stokes solvers because it is time-varying , with a fairly complex structure, but still has an exact solution.  
+The exact solution on a periodic domain of dimension $[0,2\pi] \times [0,1\pi]$ is
+\[ u=\sin (x) \cos (y) F(t)\]
+\[ v=-\cos (x) \sin (y) F(t)\]
+\[ F(t)=e^{-2\nu t}\]
+
+\subsection{Comparison with exact solution}
+For a first check, we can look at the difference between the numerical and exact solution.
+
+\subsection{Convergence test}
+A common test is to observe how the solution accuracy increases with decreasing grid spacing.  The rate at which the error decreases is called the convergence rate, also known as the order of accuracy of the solution algorithm.  
+
+Difference schemes have different convergence rates, which can be calculated theoretically.  For example, the forward Euler timestepping used in BINS is first-order, while the spatial differences are second order\footnote{The first derivatives are only second order accurate because of the staggered grid.}.  But what is the order of accuracy of BINS?
+
+We can measure the order of accuracy of our real code using a convergence test.  We solve the same test problem, the Taylor-Green vortex, up to the same time for a range of spatial and time steps.  We calculate the error of our solution, using the known exact solution.  We can now plot the error as a function of the grid spacing/time step.  The order of accuracy of our code is the slope of the best fit line through this plot.
+
+\includegraphics[width=\textwidth]{convergence.png} 
+order = 0.73
+
+\subsection{Error over time}  
+We also want to know how much error accumulates as the solution progresses in time.  We can measure this by calculating the error at each timestep for a given resolution, and plotting the results.
+
+
+\end{document}
+
+
+
+
+
+
+
+

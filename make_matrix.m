@@ -1,23 +1,40 @@
-function [A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC)
+function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 	% form the matrix inversion problem that solves for the pressure
 	% Ap = f
+	% for details, see Section 3.4 on page 7
+	%
+	% inputs:
+	% bigM: the size of the matrix
+	% N: number of grid points in x and y direction
+	% ng: number of guardcells
+	% h: grid spacing dx and dy
+	% Mlookup: matrix to look up (i,j) coordinates from matrix location
+	% m: matrix to look up matrix location from (i,j) coordinates
+	% rhs: right hand side of Poisson equation
+	% p: current pressure (used to initialize)
+	% BC: array of boundary conditions (4 x 1 array)
+	%
+	% returns:
+	% A: matrix defining Poisson operator and boundary conditions (bigM x bigM array)
+	% f: vector defining right hand side (bigM x 1 array)
+	
 	A = sparse(bigM,bigM);
+	f = sparse(bigM,1);
 	for Midx = 1:bigM
 		A(Midx,Midx) = -4;
 		idx = Mlookup(Midx,:);
 		i = idx(1); j = idx(2);
-		f( m(i,j),1 ) = (h^2) * rhs(i+ng,j+ng); 
-		pGuess( m(i,j),1 ) = p(i+ng,j+ng);
+		f( Midx,1 ) = (h^2) * rhs(i+ng,j+ng); 
 		% interior point---------------------------------------------------------------------------------
-		if i>1 && i < N1 &&  j>1 && j < N2 
+		if i>1 && i < N &&  j>1 && j < N 
 			A(Midx, m(i-1,j) ) = 1; 
 			A(Midx, m(i+1,j) ) = 1; 
 			A(Midx, m(i,j-1) ) = 1; 
 			A(Midx, m(i,j+1) ) = 1; 
 		% lower x boundary-------------------------------------------------------------------------------
-		elseif  i ==1 &&  j>1 && j < N2 
+		elseif  i ==1 &&  j>1 && j < N 
 			if BC(1)== sqrt(-1) % periodic BC
-				A(Midx, m(N1,j) ) = 1; 
+				A(Midx, m(N,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
@@ -28,7 +45,7 @@ function [A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC)
 				A(Midx, m(i,j+1) ) = 1; 	
 			endif		
 		% upper x boundary-------------------------------------------------------------------------------
-		elseif i==N1 &&  j>1 && j < N2
+		elseif i==N &&  j>1 && j < N
 			if BC(2)==sqrt(-1) % periodic BC
                                         			A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(1,j) ) = 1; 
@@ -36,16 +53,16 @@ function [A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC)
 				A(Midx, m(i,j+1) ) = 1; 
 			else % BC is wall moving with speed = BC parallel to itself
 				A(Midx, m(i-1,j) ) = 1; 
-				A(Midx, m(N1-1,j) ) = 1; 
+				A(Midx, m(N-1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
 			endif
 		% lower y boundary-------------------------------------------------------------------------------
-		elseif i>1 && i < N1 && j==1 
+		elseif i>1 && i < N && j==1 
 			if BC(3)==sqrt(-1) % periodic BC
                                         			A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
-				A(Midx, m(i,N2) ) = 1; 
+				A(Midx, m(i,N) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
 			else  % BC is wall moving with speed = BC parallel to itself
 				A(Midx, m(i-1,j) ) = 1; 
@@ -54,7 +71,7 @@ function [A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC)
 				A(Midx, m(i,j+1) ) = 1; 
 			endif
 		% upper y boundary-------------------------------------------------------------------------------
-		elseif i>1 && i < N1 &&  j==N2 
+		elseif i>1 && i < N &&  j==N 
 			if BC(4)==sqrt(-1) % periodic BC
                                         			A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
@@ -64,14 +81,14 @@ function [A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC)
 				A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
-				A(Midx, m(i,N2-1) ) = 1; 
+				A(Midx, m(i,N-1) ) = 1; 
 			endif
 		% lower left corner------------------------------------------------------------------------------
 		elseif i==1 && j==1 
 			if BC(1)==sqrt(-1) % periodic  BC
-				%A(Midx, m(N1,j) ) = 1; 
+				%A(Midx, m(N,j) ) = 1; 
 				%A(Midx, m(i+1,j) ) = 1; 
-				%A(Midx, m(i,N2) ) = 1; 
+				%A(Midx, m(i,N) ) = 1; 
 				%A(Midx, m(i,j+1) ) = 1; 
 				% pin down corner to allow matrix to solve
 				A(Midx,Midx) = 1;
@@ -83,9 +100,9 @@ function [A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC)
 				A(Midx, m(i,j+1) ) = 1; 
 			endif
 		% upper left corner------------------------------------------------------------------------------
-		elseif i==1 && j==N2 
+		elseif i==1 && j==N 
 			if BC(1)==sqrt(-1) % periodic BC
-				A(Midx, m(N1,j) ) = 1; 
+				A(Midx, m(N,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,1) ) = 1; 
@@ -93,23 +110,23 @@ function [A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC)
 				A(Midx, m(2,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
-				A(Midx, m(i,N2-1) ) = 1; 
+				A(Midx, m(i,N-1) ) = 1; 
 			endif
 		% lower right corner-----------------------------------------------------------------------------
-		elseif i==N1 && j==1 
+		elseif i==N && j==1 
 			if BC(1)==sqrt(-1) % periodic BC
 				A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(1,j) ) = 1; 
-				A(Midx, m(i,N2) ) = 1; 
+				A(Midx, m(i,N) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
 			else % BC is wall moving with speed = BC parallel to itself
 				A(Midx, m(i-1,j) ) = 1; 
-				A(Midx, m(N1-1,j) ) = 1; 
+				A(Midx, m(N-1,j) ) = 1; 
 				A(Midx, m(i,2) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
 			endif
 		% upper right corner-----------------------------------------------------------------------------
-		elseif i==N1 && j==N2 
+		elseif i==N && j==N 
 			if BC(1)==sqrt(-1) % periodic BC
 				A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(1,j) ) = 1; 
@@ -117,9 +134,9 @@ function [A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC)
 				A(Midx, m(i,1) ) = 1; 
 			else % BC is wall moving with speed = BC parallel to itself
 				A(Midx, m(i-1,j) ) = 1; 
-				A(Midx, m(N1-1,j) ) = 1; 
+				A(Midx, m(N-1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
-				A(Midx, m(i,N2-1) ) = 1; 
+				A(Midx, m(i,N-1) ) = 1; 
 			endif
 		endif
 	endfor % loop over rows in matrix A

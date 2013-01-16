@@ -1,27 +1,30 @@
-function plotSoln(u,v,p,ng,L,N)
+function plotSoln(u,v,ng,L,N,h)
 % plot solution to BINS
-	% make x,y grids
-	xx = linspace(0,L(1),N(1));
-	yy = linspace(0,L(2),N(2));
-	[x,y] = meshgrid(xx,yy);
-	
+
 	% u velocity--------------------------------------------------------------------------------------
 	figure(1)
-	surf(y,x,u(ng+1:ng+N(1),ng+1:ng+N(2) ),'edgecolor','none')
+	xx = linspace(0,L,N+1);
+	yy = linspace(h,L-h,N);
+	[x,y] = meshgrid(xx,yy);
+	surf(x,y,transpose(u(ng+1:ng+N+1,ng+1:ng+N)),'edgecolor','none')
 	%caxis([-1 1])
 	colorbar
 	title('u velocity')
 	view(2)
 	grid off
-	xlim([0 L(1)]); ylim([0 L(2)]);
+	xlim([0 L]); ylim([0 L]);
 	
 	% v velocity--------------------------------------------------------------------------------------
 	figure(2)
-	surf(y,x,v(ng+1:ng+N(1),ng+1:ng+N(2) ),'edgecolor','none')
+	xx = linspace(h,L-h,N);
+	yy = linspace(0,L,N+1);
+	[x,y] = meshgrid(xx,yy);
+	surf(x,y,transpose(v(ng+1:ng+N,ng+1:ng+N+1 )),'edgecolor','none')
 	%caxis([-1 1])
 	colorbar
 	title('v velocity')
 	view(2)	
 	grid off
-	xlim([0 L(1)]); ylim([0 L(2)]);
+	xlim([0 L]); ylim([0 L]);
+	 
 endfunction

@@ -8,10 +8,11 @@
 
 function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 % solves the 2D incompressible Navier-Stokes equations
+% for an overview of the algorithm used here, see Section 3.2 on page 4
 %
 % inputs: 
-% N = number of cells in x and y (2x1 array)
-% L = physical dimension in x and y (2x1 array)
+% N = number of cells in x and y 
+% L = physical dimension in x and y 
 % dt = timestep
 % T = final time
 % BC = boundary conditions (4x1 array)
@@ -32,19 +33,19 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 	while t < T
 		% step forward in time
 
-		% predict next step velocity with advection and diffusion terms----------------------------------  
+		% predict next step velocity with advection and diffusion terms (equation 1)
 		[u_advection, v_advection] = advection(u,v,h,ng); % the advection term 
 		[u_diffusion, v_diffusion] = diffusion(u,v,h,ng,BC,nu); % the diffusion term
 
 		[uStar,vStar] = predict(u,v,u_advection,v_advection,u_diffusion,v_diffusion,dt);  % estimate next time step velocity
 		[uStar,vStar,p] = fillBC(uStar,vStar,p,ng,N,BC); % enforce boundary conditions	
 
-		% project the velocity field onto a divergence-free field to get the pressure--------------------
+		% project the velocity field onto a divergence-free field to get the pressure (equation 2)
 		newP = pressure(uStar,vStar,p,h,dt,ng,BC,N); % do the projection
 		[uStar,vStar,newP] = fillBC(uStar,vStar,newP,ng,N,BC); % enforce boundary conditions
 
-		% correct the velocity to be divergence-free using the updated pressure--------------------------
-		[newU,newV] = correct(uStar,vStar,u,v,newP,h,dt,ng);
+		% correct the velocity to be divergence-free using the updated pressure (equation 3)
+		[newU,newV] = correct(uStar,vStar,newP,h,dt,ng);
 		u=newU; v=newV;
 		p=newP;
 		[u,v,p] = fillBC(u,v,p,ng,N,BC);  % enforce boundary conditions
@@ -54,7 +55,7 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 	endwhile
 
 	% plot the solution!
-	plotSoln(u,v,p,ng,L,N)
+	plotSoln(u,v,ng,L,N,h)
 
                         % same the end time data in case we want it again
 	save( ['./BINS_output',int2str(N(1)),'.mat'], ...

@@ -7,3 +7,5 @@
 *.log
 *.gz
 *.toc
+*.svg
+*.dvi

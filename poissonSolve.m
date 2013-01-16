@@ -1,24 +1,42 @@
-function solution = poissonSolve(rhs,p,h,BC,ng)
-	% solve the Poisson equation d^2 solution / dx_i dx_i = rhs
+function solution = poissonSolve(rhs,h,BC,ng,N)
+	% solve the Poisson equation:   d^2 solution / dx^2 + d^2 solution/dy^2 = rhs
+	% Numerically, this equation results in a matrix inversion:
+	% A_ij solution_j = rhs_i
+	% for more details, see Section 3.4 on page 7
 	%
-	% This equation results in a matrix inversion:
-	% A_ij soln_j = rhs_i
-
-	% find the dimensions of the matrix
-	N = size(rhs);
-	M = prod(N);
-	solution = p;
-
-	N1 = N(1) - 2*ng; N2 = N(2) - 2*ng;
-	bigM = N1*N2;
-	A =sparse(bigM,bigM); f = sparse(bigM,1); pGuess = zeros(bigM,1);
-	for i=1:N1; for j=1:N2
-		m(i,j) = i + (j-1)*N1;
+	% two solution methods are implemented here: 
+	%	matlab's built-in matrix inverter
+	%	multigrid with a red-black Gauss Seidel core
+	%
+	% inputs:
+	% rhs: right hand side to Poisson equation (N+2*ng x N+2*ng array)
+	% h: grid size
+	% BC: array defining boundary conditions (4x1 array)
+	% ng: number of guardcells
+	% N: number of points in the grid
+	%
+	% returns:
+	% solution: the solution to the Poisson equation, the new pressure (N+2*ng x N+2*ng array)
+	solution = rhs;
+	
+	% solve using multigrid
+	%solution(ng+1:ng+N,ng+1:ng+N) = multigrid_solve(ng+1:ng+N,ng+1:ng+N),h,N,BC);
+	%return
+	
+	% solve using built in matrix inverter
+	% make a lookup table for converting between matrix and vector representations
+	% of the xy plane
+	bigM = N^2;
+	for i=1:N; for j=1:N
+		m(i,j) = i + (j-1)*N;
 		Mlookup( m(i,j), :) = [i,j];                    	          	
 	endfor; endfor
-          	                          	
-	[A,f,pGuess] = make_matrix(bigM,N1,N2,ng,h,Mlookup,m,rhs,p,BC);
+          	                          
+	% make the matrix A that defines the Poisson equation with the BCs
+	% and the matrix f that defines our right hand side          	                    	
+	[A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC);
                                 	           
+	% we are solving solnVector = A\f using matlab's built-ins
 	solnVector = A\f;
                                 	           
 	% convert back to x,y,z coordinates
@@ -27,6 +45,7 @@ function solution = poissonSolve(rhs,p,h,BC,ng)
 		i = idx(1); j=idx(2);
 		solution(i+ng,j+ng) = solnVector(Midx);
 	endfor
+
 endfunction
 
 

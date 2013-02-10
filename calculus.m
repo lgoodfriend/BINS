@@ -4,7 +4,6 @@
 %	adv_duvdy
 %	adv_dvudx
 %	adv_dvvdy
-%	firstDeriv
 %	secondDeriv
 %	divergence
 %	correct_dpdx
@@ -14,17 +13,17 @@
 %------------------------------------------------------------------------------------------------------------------------------------------
 % all of the advection term functions
 % these are very similar, but all differ slightly due to the staggered grid
-% for an overview of the advection term derivatives, see Section 3.3.2 on page 6
+% for an overview of the advection term derivatives, see Section 3.3.2 on page 7
 function duudx = adv_duudx(u,h)
 	% calculate the quantity d(uu)/dx for use in the x-direction advection term
 	% for details, see Section 4.1 (page 10)
 	%
 	% inputs:
-	% u: x-direction velocity (N+2*ng+1 x N+2*ng array)
+	% u: x-direction velocity, size [N+2*ng+1   N+2*ng]
 	% h: spatial step in x direction
 	%
 	% returns:
-	% duudx: derivative of quantity uu with respect to x (N+2*ng+1 x N+2*ng array)
+	% duudx: derivative of quantity uu with respect to x, size [N+2*ng+1   N+2*ng]
 	
 	% initialize to get correct shape
 	duudx = zeros(size(u));
@@ -42,12 +41,12 @@ function duvdy = adv_duvdy(u,v,h)
 	% for details, see Section 4.1 (page 10)
 	%
 	% inputs:
-	% u: x-direction velocity (N+2*ng+1 x N+2*ng array)
-	% v: y-direction velocity (N+2*ng x N+2*ng+1 array)
+	% u: x-direction velocity, size [N+2*ng+1   N+2*ng]
+	% v: y-direction velocity, size [N+2*ng   N+2*ng+1]
 	% h: spatial step in y direction
 	%
 	% returns:
-	% duvdy: derivative of quantity uv with respect to y (N+2*ng+1 x N+2*ng array)
+	% duvdy: derivative of quantity uv with respect to y, size [N+2*ng+1   N+2*ng]
 	
 	% initialize to get correct shape
 	duvdy = zeros(size(u));
@@ -68,12 +67,12 @@ function dvudx = adv_dvudx(u,v,h)
 	% for details, see Section 4.1 (page 10)
 	%
 	% inputs:
-	% u: x-direction velocity (N+2*ng+1 x N+2*ng array)
-	% v: y-direction velocity (N+2*ng x N+2*ng+1 array)
+	% u: x-direction velocity, size [N+2*ng+1   N+2*ng]
+	% v: y-direction velocity, size [N+2*ng   N+2*ng+1]
 	% h: spatial step in y direction
 	%
 	% returns:
-	% dvudx: derivative of quantity vu with respect to y  (N+2*ng x N+2*ng+1 array)
+	% dvudx: derivative of quantity vu with respect to y, size  [N+2*ng   N+2*ng+1]
 	
 	% initialize to get correct shape
 	dvudx = zeros(size(v));
@@ -94,11 +93,11 @@ function dvvdy = adv_dvvdy(v,h)
 	% for details, see Section 4.1 (page 10)
 	%
 	% inputs:
-	% v: y-direction velocity  (N+2*ng x N+2*ng+1 array)
+	% v: y-direction velocity, size  [N+2*ng   N+2*ng+1]
 	% h: spatial step in y direction
 	%
 	% returns:
-	% dvvdy: derivative of quantity vv with respect to y  (N+2*ng x N+2*ng+1 array)
+	% dvvdy: derivative of quantity vv with respect to y, size  [N+2*ng   N+2*ng+1]
 	
 	% initialize to get correct shape
 	dvvdy = zeros(size(v));
@@ -114,9 +113,9 @@ endfunction
 %------------------------------------------------------------------------------------------------------------------------------------------
 function derivOut = secondDeriv(u,dir,h)
 	% calculate second derivative
-	% This is much less complicated than the firstDeriv function because all output derivatives are 
+	% This is much less complicated than the adv_dXXdX functions because all output derivatives are 
 	% located in the same part of the cell as the input variable.
-	% for details, see Section 3.3.2 (page 6)
+	% for details, see Section 3.3.2 (page 7)
 	%
 	% inputs:
 	% u: variable to take derivative of (variable dimension)
@@ -138,16 +137,16 @@ endfunction
 %------------------------------------------------------------------------------------------------------------------------------------------
 function divOut = divergence(u,v,h)
 	% calculates the divergence
-	% for an overview of first derivatives, see Section 3.3.2 on page 6
+	% for an overview of first derivatives, see Section 3.3.2 on page 7
 	% for details, see Section 4.1 on page 10
 	%
 	% inputs:
-	% u: x-direction velocity (N+2*ng+1 x N+2*ng array)
-	% v: y-direction velocity (N+2*ng x N+2*ng+1 array)
+	% u: x-direction velocity, size [N+2*ng+1   N+2*ng]
+	% v: y-direction velocity, size [N+2*ng   N+2*ng+1]
 	% h: spatial step
 	%
 	% returns:
-	% divOut: divergence of u and v (N+2*ng x N+2*ng array)
+	% divOut: divergence of u and v, size [N+2*ng   N+2*ng]
 	
 	dudx = (u(2:end,:)-u(1:end-1,:))/h;
 	dvdy = (v(:,2:end)-v(:,1:end-1))/h;
@@ -156,17 +155,17 @@ endfunction
 %------------------------------------------------------------------------------------------------------------------------------------------
 % both of the pressure derivative functions
 % like the advection terms, these are very similar but differ due to the staggered grid
-% for an overview of the first derivatives, see Section 3.3.2 on page 6
+% for an overview of the first derivatives, see Section 3.3.2 on page 7
 function dpdx = correct_dpdx(p,h)
 	% calculates dpdx on cell faces from p on cell centers
 	% for details, see Section 4.1 (page 10)
 	%
 	% inputs:
-	% p: pressure (N+2*ng x N+2*ng array)
+	% p: pressure, size [N+2*ng   N+2*ng]
 	% h: spatial step
 	%
 	% returns:
-	% dpdx: derivative of pressure in the x direction (N+2*ng+1 x N+2*ng array)
+	% dpdx: derivative of pressure in the x direction, size [N+2*ng+1   N+2*ng]
 	
 	% initialize to correct size
 	size_p = size(p);
@@ -179,11 +178,11 @@ function dpdy = correct_dpdy(p,h)
 	% for details, see Section 4.1 (page 10)
 	%
 	% inputs:
-	% p: pressure (N+2*ng x N+2*ng array)
+	% p: pressure, size [N+2*ng   N+2*ng]
 	% h: spatial step
 	%
 	% returns:
-	% dpdy: derivative of pressure in the y direction (N x N+1 array)
+	% dpdy: derivative of pressure in the y direction, size  [N+2*ng  N+2*ng+1]
 	
 	% initialize to correct size
 	size_p = size(p);

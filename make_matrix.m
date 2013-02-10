@@ -1,22 +1,21 @@
 function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 	% form the matrix inversion problem that solves for the pressure
 	% Ap = f
-	% for details, see Section 3.4 on page 7
+	% for details, see Section 3.4 on page 8
 	%
 	% inputs:
 	% bigM: the size of the matrix
 	% N: number of grid points in x and y direction
 	% ng: number of guardcells
 	% h: grid spacing dx and dy
-	% Mlookup: matrix to look up (i,j) coordinates from matrix location
-	% m: matrix to look up matrix location from (i,j) coordinates
-	% rhs: right hand side of Poisson equation
-	% p: current pressure (used to initialize)
-	% BC: array of boundary conditions (4 x 1 array)
+	% Mlookup: matrix to look up (i,j) coordinates from matrix location, size [bigM 2]
+	% m: matrix to look up matrix location from (i,j) coordinates, size [N  N]
+	% rhs: right hand side of Poisson equation, size [N+2*ng   N+2*ng]
+	% BC: array of boundary conditions, size [4]
 	%
 	% returns:
-	% A: matrix defining Poisson operator and boundary conditions (bigM x bigM array)
-	% f: vector defining right hand side (bigM x 1 array)
+	% A: matrix defining Poisson operator and boundary conditions, size [bigM   bigM]
+	% f: vector defining right hand side, size [bigM]
 	
 	A = sparse(bigM,bigM);
 	f = sparse(bigM,1);

@@ -1,4 +1,4 @@
-% Basic Incompressible Navier-Stokes solver
+% Berkeley Incompressible Navier-Stokes solver
 % an educational tool
 %
 % written in Matlab, the prototyping language of engineers
@@ -15,7 +15,7 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 % L = physical dimension in x and y 
 % dt = timestep
 % T = final time
-% BC = boundary conditions (4x1 array)
+% BC = boundary conditions, size [4] 
 % IC_choice = choice of initial conditions defined in IC.m
 % nu = molecular viscosity
 % ng = number of ghostcells 
@@ -33,19 +33,19 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 	while t < T
 		% step forward in time
 
-		% predict next step velocity with advection and diffusion terms (equation 1)
-		[u_advection, v_advection] = advection(u,v,h,ng); % the advection term 
-		[u_diffusion, v_diffusion] = diffusion(u,v,h,ng,BC,nu); % the diffusion term
+		% predict next step velocity with advection and diffusion terms (equations 1 and 2)
+		[u_advection, v_advection] = advection(u,v,h); % the advection term 
+		[u_diffusion, v_diffusion] = diffusion(u,v,h,nu); % the diffusion term
 
 		[uStar,vStar] = predict(u,v,u_advection,v_advection,u_diffusion,v_diffusion,dt);  % estimate next time step velocity
 		[uStar,vStar,p] = fillBC(uStar,vStar,p,ng,N,BC); % enforce boundary conditions	
 
-		% project the velocity field onto a divergence-free field to get the pressure (equation 2)
-		newP = pressure(uStar,vStar,p,h,dt,ng,BC,N); % do the projection
+		% project the velocity field onto a divergence-free field to get the pressure (equation 3)
+		newP = pressure(uStar,vStar,p,h,dt,ng,BC,N); % do the projection		
 		[uStar,vStar,newP] = fillBC(uStar,vStar,newP,ng,N,BC); % enforce boundary conditions
-
-		% correct the velocity to be divergence-free using the updated pressure (equation 3)
-		[newU,newV] = correct(uStar,vStar,newP,h,dt,ng);
+		
+		% correct the velocity to be divergence-free using the updated pressure (equations 4 and 5)
+		[newU,newV] = correct(uStar,vStar,newP,h,dt);
 		u=newU; v=newV;
 		p=newP;
 		[u,v,p] = fillBC(u,v,p,ng,N,BC);  % enforce boundary conditions
@@ -58,7 +58,8 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 	plotSoln(u,v,ng,L,N,h)
 
                         % same the end time data in case we want it again
-	save( ['./BINS_output',int2str(N(1)),'.mat'], ...
+                        T = t;
+	save( ['./BINS_output',int2str(N),'.mat'], ...
 	             'u','v', 'p', 'ng', 'nu', 'L', 'N', 'T');
 
 endfunction

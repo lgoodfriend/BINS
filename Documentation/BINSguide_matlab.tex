@@ -10,7 +10,7 @@
 \usepackage{ulem}
 \usepackage{color}
 \usepackage{placeins}
-\usepackage[dvips,letterpaper,margin=1in]{geometry} %for one inch margins
+\usepackage[dvips,letterpaper,margin=0.5in]{geometry} %for one inch margins
 \author{Lauren Goodfriend}
 \title{Guide to the BINS educational solver}
 \begin{document}
@@ -21,13 +21,13 @@
 \section{Introduction}
 %----------------------------------------------------------------------
 
-The Basic Incompressible Navier-Stokes (BINS) solver is designed to be an educational tool for learning how to solve the incompressible Navier-Stokes equation with finite differences.  A gap exists between the basic numerical methods learned in a numerical partial differential equations class and the complexity of full Navier-Stokes research codes.  BINS is intended to form a bridge for engineering students who have some knowledge of numerical methods, but are unsure how to combine them into a working Navier-Stokes solver.  It may also be useful for students wrestling with an enormous research code for the first time, as a reference for the essential processes underlying most finite difference physical Navier-Stokes solvers.
+The Berkeley Incompressible Navier-Stokes (BINS) solver is designed to be an educational tool for learning how to solve the two-dimensional incompressible Navier-Stokes equation with finite differences.  A gap exists between the basic numerical methods learned in a numerical partial differential equations class and the complexity of full Navier-Stokes research codes.  BINS is intended to form a bridge for engineering students who have some knowledge of numerical methods, but are unsure how to combine them into a working Navier-Stokes solver.  It may also be useful for students wrestling with an enormous research code for the first time, as a reference for the essential processes underlying most finite difference physical Navier-Stokes solvers.
 
 %----------------------------------------------------------------------
 \section{Getting started}
 %----------------------------------------------------------------------
 
-BINS is written in Matlab/Octave, so you will need one of those interpreters to run the code.  Octave is a free, open-source language that is very similar to Matlab.  You can learn about it at \texttt{www.gnu.org/software/octave}.
+BINS is written in Matlab/Octave, so you will need one of those interpreters to run the code.  Octave is a free, open-source language that is very similar to Matlab.  You can learn about it at \[ \texttt{www.gnu.org/software/octave} \]
 
 The first step is to download the code tarball from \[ \texttt{https://github.com/lgoodfriend/BINS/downloads}\]  After you've downloaded and untarred the tarball, you should see a folder with a bunch of files in it.  The key file for getting started is \texttt{intro.m}.
 
@@ -70,8 +70,14 @@ The initial condition is controlled by \texttt{IC\_choice}, which indexes to an 
 \begin{enumerate}
 \item $u$ = 0, $v$ = 0, $p$ = 0
 \item $u$ = 1, $v$ = 1, $p$ = 0
-\item Taylor-Green vortex
+\item Taylor-Green vortex 
+\[ u = \sin(x)\cos(y)\]
+\[ v = -\cos(x)\sin(y)\]
+\[ p = \frac{1}{4}\left( \cos(2x) + \cos(2y) \right)\]
 \item shear flow
+\[ u = \begin{cases} \tanh\left(30(y-\frac{1}{4})\right) & \text{if } y \le \frac{L}{2} \\ \tanh\left(30(\frac{3}{4}-y)\right) & \text{otherwise} \end{cases}\]
+\[ v = \frac{1}{20}\sin(2\pi x)\]
+\[ p = 0\]
 \end{enumerate}
 You can add a new initial condition by editing \texttt{IC.m} to include the initial condition you would like.  If you are setting a new initial condition, it is important to understand how the staggered grid is set up (see section~\ref{staggeredGrid}).
 
@@ -79,12 +85,7 @@ You can add a new initial condition by editing \texttt{IC.m} to include the init
 \section{Underlying mathematics}
 %----------------------------------------------------------------------
 \subsection{Notation}
-We use index notation for brevity when discussing the Navier-Stokes equation.  The variable $x_i$ represents the spatial dimensions
-\[ x_1 = x\]
-\[ x_2 = y\] 
-and $u_i$ represents the velocity components
-\[ u_1 = u = \mathrm{velocity\ in\ x\ direction}\]
-\[ u_2 = v = \mathrm{velocity\ in\ y\ direction}\]
+Subscripts are used to denote the location of a variable on the numerical grid.  The variable $u_{ij}$ represents the numerical value of $u$ at point $ij$, where $x=i\Delta x$ and $y=j\Delta y$.
 
 Superscripts are used to denote the numerical timestep.  The variable $u^n$ represents the numerical value of $u$ at timestep $n$, or time $t=n\Delta t$.
 
@@ -93,60 +94,74 @@ Superscripts are used to denote the numerical timestep.  The variable $u^n$ repr
 
 We want to solve the incompressible Navier-Stokes equation
 \begin{align*}
-  \left. \underbrace{\frac{\partial u_i}{\partial t}}_\textrm{time} +  \underbrace{\frac{\partial u_i u_j}{\partial x_j}}_\textrm{advection} = \underbrace{- \frac{1}{\rho}\frac{\partial p}{\partial x_i}}_\textrm{pressure} + \underbrace{\nu \frac{\partial^2 u_i}{\partial x_j \partial x_j}}_\textrm{diffusion} \right\} &\textrm{momentum conservation} \\
-\left. \frac{\partial u_i}{\partial x_i} = 0 \right\} &\textrm{mass conservation}
+  \left. \underbrace{\frac{\partial u}{\partial t}}_\textrm{time} +  \underbrace{\frac{\partial u u}{\partial x} + \frac{\partial u v}{\partial y}}_\textrm{advection} = \underbrace{- \frac{1}{\rho}\frac{\partial p}{\partial x}}_\textrm{pressure} + \underbrace{\nu \left(\frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right) }_\textrm{diffusion} \right\} &\textrm{momentum conservation in x} \\
+  \left. \underbrace{\frac{\partial v}{\partial t}}_\textrm{time} +  \underbrace{\frac{\partial v u}{\partial x} + \frac{\partial v v}{\partial y}}_\textrm{advection} = \underbrace{- \frac{1}{\rho}\frac{\partial p}{\partial y}}_\textrm{pressure} + \underbrace{\nu \left(\frac{\partial^2 v}{\partial x^2} + \frac{\partial^2 v}{\partial y^2}\right) }_\textrm{diffusion} \right\} &\textrm{momentum conservation in y} \\
+\left. \frac{\partial u}{\partial x} + \frac{\partial v}{\partial y}  = 0 \right\} &\textrm{mass conservation}
 \end{align*}
 
 The code first estimates the solution to the Navier-Stokes equation using only the advection and diffusion terms. 
 \begin{equation}
- \frac{\partial u_i^*}{\partial t} =   -\frac{\partial u_i^n u_j^n}{\partial x_j} + \nu \frac{\partial^2 u_i^n}{\partial x_j \partial x_j} 
- \label{predict}
+ \frac{\partial u^*}{\partial t} =   -\frac{\partial u^n u^n}{\partial x} -\frac{\partial u^n v^n}{\partial y} + \nu\left( \frac{\partial^2 u^n}{\partial x^2} + \frac{\partial^2 u^n}{\partial y^2}  \right) 
+ \label{predictx}
 \end{equation}
-The superscript $*$ denotes that the velocity calculated in this step $u^*$ is temporary and doesn't exist at a timestep.
-
-The code then projects the intermediate velocity field $u_i^*$ onto a divergence-free space using the next time step pressure $p^{n+1}$ calculated by
 \begin{equation}
-\nabla^2 p^{n+1} = \frac{1}{\Delta t}\frac{\partial u_i^*}{\partial x_i}
+  \frac{\partial v^*}{\partial t} =   -\frac{\partial v^n u^n}{\partial x} -\frac{\partial v^n v^n}{\partial y} + \nu\left( \frac{\partial^2 v^n}{\partial x^2} + \frac{\partial^2 v^n}{\partial y^2}  \right)
+ \label{predicty}
+\end{equation}
+The superscript $*$ denotes that the velocities calculated in this step are temporary and don't exist at a timestep.
+
+The code then projects the intermediate velocity field $(u^*,v^*)$ onto a divergence-free space using the next time step pressure $p^{n+1}$ calculated by
+\begin{equation}
+\nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x} + \frac{\partial v^*}{\partial y} \right)
 \label{poisson}
 \end{equation}
 
-Then we can find the new divergence free velocity field $u_i^{n+1}$ 
+Then we can find the new divergence free velocity field $(u^{n+1},v^{n+1})$ 
 
 \begin{equation}
-u_i^{n+1}= u_i^* - \Delta t\frac{\partial p^{n+1}}{\partial x_i}
-\label{correct}
+u^{n+1}= u^* - \Delta t\frac{\partial p^{n+1}}{\partial x}
+\label{correctx}
+\end{equation}
+\begin{equation}
+v^{n+1}= v^* - \Delta t\frac{\partial p^{n+1}}{\partial y}
+\label{correcty}
 \end{equation}
 
-since
+since, using equation~\ref{poisson},
 \begin{align*}
-\frac{\partial  u_i^{n+1}}{\partial x_i} &= \frac{\partial}{\partial x_i}\left(u_i^* - \Delta t\frac{\partial p^{n+1}}{\partial x_i} \right) \\
-&= \frac{\partial u_i^*}{\partial x_i} - \Delta t\nabla^2p^{n+1} \\
+\frac{\partial  u^{n+1}}{\partial x} +  \frac{\partial  v^{n+1}}{\partial y}&= \frac{\partial}{\partial x}\left(u^* - \Delta t\frac{\partial p^{n+1}}{\partial x} \right) + \frac{\partial}{\partial y}\left(v^* - \Delta t\frac{\partial p^{n+1}}{\partial y} \right)\\
+&= \frac{\partial u^*}{\partial x} + \frac{\partial v^*}{\partial y} - \Delta t\nabla^2p^{n+1} \\
 &= 0 \\
 \end{align*}
 
-These steps appear in the functions in the file \texttt{advance.m}.  In the $\texttt{predict}$ function, the next time step velocity is estimated following equation~\ref{predict}.  This step uses the advection and diffusion terms, calculated in subroutines \texttt{advection} and \texttt{diffusion} respectively.  The poisson equation for pressure in equation~\ref{poisson} is solved in the function $\texttt{pressure}$.  The next time step velocity is then calculated by correcting the predicted velocity in function \texttt{correct}, as in equation~\ref{correct}.  These steps are outlined below.
+These steps appear in the functions in the file \texttt{advance.m}.  In the $\texttt{predict}$ function, the next time step velocity is estimated following equations~\ref{predictx} and~\ref{predicty}.  This step uses the advection and diffusion terms, calculated in subroutines \texttt{advection} and \texttt{diffusion} respectively.  The Poisson equation for pressure in equation~\ref{poisson} is solved in the function $\texttt{pressure}$.  The next time step velocity is then calculated by correcting the predicted velocity in function \texttt{correct}, as in equations~\ref{correctx} and~\ref{correcty}.  These steps are outlined below.
 
+\renewcommand\arraystretch{2.5}
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline 
 \bf{Component} & \bf{Math} & \bf{Function} & \bf{File}\\ 
 \hline 
-advection term & \Large{$\frac{\partial u_i u_j}{\partial x_j}$} & \texttt{advection} & \texttt{advance.m}\\ 
+advection term & \Large{$\frac{\partial u u}{\partial x} + \frac{\partial u v}{\partial y}$}  & \texttt{advection} & \texttt{advance.m}\\ 
+ & \Large{$\frac{\partial v u}{\partial x} + \frac{\partial v v}{\partial y}$}  &  & \\ 
 \hline 
-diffusion term & \Large{$\nu \frac{\partial^2 u_i}{\partial x_j \partial x_j}$} & \texttt{diffusion} & \texttt{advance.m} \\ 
+diffusion term & \Large{$\nu\left( \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right)$} & \texttt{diffusion} & \texttt{advance.m} \\ 
+ &  \Large{$\nu\left( \frac{\partial^2 v}{\partial x^2} + \frac{\partial^2 v}{\partial y^2}\right)$} &  &  \\
 \hline 
-next time step: velocity prediction & \Large{$ \frac{\partial u_i^*}{\partial t} =   -\frac{\partial u_i^n u_j^n}{\partial x_j} + \nu \frac{\partial^2 u_i^n}{\partial x_j \partial x_j} $} & \texttt{predict}& \texttt{advance.m} \\ 
+next time step: & \Large{$ \frac{\partial u^*}{\partial t} =   -\frac{\partial u^n u^n}{\partial x} -\frac{\partial u^n v^n}{\partial y} + \nu\left( \frac{\partial^2 u^n}{\partial x^2} + \frac{\partial^2 u^n}{\partial y^2} \right)$} & \texttt{predict}& \texttt{advance.m} \\ 
+ velocity prediction & \Large{$ \frac{\partial v^*}{\partial t} =   -\frac{\partial v^n u^n}{\partial x} -\frac{\partial v^n v^n}{\partial y} + \nu\left( \frac{\partial^2 v^n}{\partial x^2} + \frac{\partial^2 v^n}{\partial y^2} \right)$} &  &   \\ 
 \hline 
-next time step: pressure & \Large{$\nabla^2 p^{n+1} = \frac{1}{\Delta t}\frac{\partial u_i^*}{\partial x_i}$} & \texttt{pressure} & \texttt{advance.m}\\ 
+next time step: pressure & \Large{$\nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x}+\frac{\partial v^*}{\partial y} \right)$} & \texttt{pressure} & \texttt{advance.m}\\ 
 \hline 
-next time step: velocity & \Large{$u_i^{n+1}= u_i^* - \Delta t\frac{\partial p^{n+1}}{\partial x_i}$} & \texttt{correct}& \texttt{advance.m} \\ 
+next time step: velocity & \Large{$u^{n+1}= u^* - \Delta t\frac{\partial p^{n+1}}{\partial x}$} & \texttt{correct}& \texttt{advance.m} \\ 
+  & \Large{$v^{n+1}= v^* - \Delta t\frac{\partial p^{n+1}}{\partial y}$} &  &   \\ 
 \hline 
 \end{tabular} 
 \end{center}
 
 \subsection{Finite differences}
 
-To approximate a partial differential equation on the computer, we use finite differences to estimate derivatives.  By default, BINS uses first-order forward Euler time stepping and second-order differences in space.
+To approximate a partial differential equation on the computer, we use finite differences to estimate derivatives.  By default, BINS uses first-order explicit forward Euler time stepping and second-order differences in space.
 
 \subsubsection{Time stepping}
 The time stepping in BINS is done using forward Euler time stepping.  If we want to approximate 
@@ -159,15 +174,18 @@ This allows us to calculate $u$ at the next timestep as
 u^{n+1} = u^n + \Delta t f(u^n,t^n)
 \end{equation}
 
-We use these time stepping routines in the \texttt{predict} function to estimate the next time step velocity using the advection and diffusion terms, without accounting for pressure.  So in BINS
-\[ f(u,t) = -\frac{\partial u_i u_j}{\partial x_j} + \nu \frac{\partial^2 u_i}{\partial x_j \partial x_j} \]
+We use these time stepping routines in the \texttt{predict} function to estimate the next time step velocity using the advection and diffusion terms, without accounting for pressure.  So in BINS we have, for the x-momentum equation,
+\[ f(u,v,t) = -\frac{\partial u u}{\partial x}-\frac{\partial v u}{\partial y} + \nu\left( \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2} \right) \]
+and for the y-momentum equation,
+\[ f(u,v,t) = -\frac{\partial v u}{\partial x}-\frac{\partial v v}{\partial y} + \nu\left( \frac{\partial^2 v}{\partial x^2} + \frac{\partial^2 v}{\partial y^2} \right) \]
 
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline 
 \bf{Component} & \bf{Math} & \bf{Function} & \bf{File}\\ 
 \hline 
-time step & \Large{$\frac{\partial u_i}{\partial t}$} & \texttt{predict}& \texttt{advance.m} \\ 
+time step & \Large{$\frac{\partial u}{\partial t}$} & \texttt{predict}& \texttt{advance.m} \\ 
+ & \Large{$\frac{\partial v}{\partial t}$} &  &   \\ 
 \hline 
 \end{tabular} 
 \end{center}
@@ -182,8 +200,7 @@ and second derivatives as
 \begin{equation}
 \label{secondDeriv}
 \frac{\partial^2 u}{\partial x^2} = \frac{u_{i+1} -2 u_i + u_{i+1}}{\Delta x^2}
-\end{equation}
-Here (just to be confusing!), $u_i$ represents the numerical value of the variable $u$ at spatial gridpoint $i$, so $u_i=u(i\Delta x)$.  
+\end{equation} 
 
 Subroutines to calculate spatial derivatives are found in the file \texttt{calculus.m}.  BINS has a different function for each first derivative used, because the staggered grid makes the indexing for each derivative slightly different.  This first derivative ends up being second-order because of the staggered grid. For details on how the first derivatives are implemented, see section~\ref{staggeredGrid}.
 
@@ -212,16 +229,18 @@ second derivative & \Large{$\frac{\partial^2 u}{\partial x^2}$} & \texttt{second
 \end{center}
 
 \subsection{Solving the Poisson equation}
+\label{poissonSolve}
+\renewcommand\arraystretch{1}
 As we saw in section~\ref{mathBasics}, we must solve a Poisson equation to find the pressure at the next timestep (equation~\ref{poisson}):
-\[\nabla^2 p^{n+1} = \frac{1}{\Delta t}\frac{\partial u_i^*}{\partial x_i} \]
+\[\nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x} + \frac{\partial v^*}{\partial y}\right)\]
 
 Solving a finite difference Poisson equation is actually inverting a matrix.  To see this, we first write the Poisson equation as a finite difference:
 \begin{align*}
-\nabla^2 p^{n+1} &= \frac{1}{\Delta t}\frac{\partial u_i^*}{\partial x_i} \\
+\nabla^2 p^{n+1} &= \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x} + \frac{\partial v^*}{\partial y}\right) \\
 \frac{p_{i+1j}-2p_{ij}+p_{i-1j}}{\Delta x^2} + \frac{p_{ij+1}-2p_{ij}+p_{ij-1}}{\Delta y^2} &= f_{ij}  \\
 \end{align*}
 
-Here, $p_{ij} = p(i\Delta x, j\Delta y)$. We've dropped the superscripts indicating timestep and written the right hand side as $f_{ij}$.  Remember that we know $f_{ij}$ and we need to solve for $p_{ij}$.  Assuming $\Delta x = \Delta y$,
+We've dropped the superscripts indicating timestep and written the right hand side as $f_{ij}$.  Remember that we know $f_{ij}$ and we need to solve for $p_{ij}$.  Assuming $\Delta x = \Delta y$,
 \begin{align*}
 \frac{p_{i+1j}-2p_{ij}+p_{i-1j}}{\Delta x^2} + \frac{p_{ij+1}-2p_{ij}+p_{ij-1}}{\Delta x^2} &= f_{ij}  \\
 p_{i+1j}-4p_{ij}+p_{i-1j}+ p_{ij+1}+p_{ij-1} &= \Delta x^2 f_{ij}  \\
@@ -251,7 +270,7 @@ For all the other points, we know some information, but other information must b
 0&0&0&0&0&1&0&1&-4\\ \end{array} \right] \left[ \begin{array}{c} p_{11}\\p_{12}\\p_{13}\\p_{21}\\p_{22}\\p_{23}\\p_{31}\\p_{32}\\p_{33}\\ \end{array}\right] = \left[ \begin{array}{c} f_{11}\\f_{12}\\f_{13}\\f_{21}\\f_{22}\\f_{23}\\f_{31}\\f_{32}\\f_{33}\\ \end{array}\right]
 \]
 
-This matrix equation is incorrect because it does not enforce boundary conditions\footnote{In fact, it does not form a true finite difference approximation to derivatives, since the rows do not all sum to 1.}. For all but the center point, we need boundary conditions to calculate the Laplacian.  
+This matrix equation is incorrect because it does not enforce boundary conditions\footnote{In fact, it does not form a true finite difference approximation to derivatives, since the rows do not all sum to 0.}. For all but the center point in this simple example, we need boundary conditions to calculate the Laplacian.  
 
 For example, if the boundary conditions are periodic (see section~\ref{periodicBCs}), then $p_{12}$ is adjacent to $p_{32}$, $p_{21}$ is adjacent to $p_{23}$, etc.  Then the matrix is
 \[ \left[ \begin{array}{c c c c c c c c c} 
@@ -295,14 +314,14 @@ This version of BINS uses Matlab/Octave's built in matrix inversion function \te
 \FloatBarrier
 \subsection{Staggered grid}
 \label{staggeredGrid}
-In a standard numerical grid, all the variables are located at cell centers (Figure~\ref{collocated}).  This arrangement is simple to code, but it is not commonly used in Navier-Stokes solvers.  A staggered grid (Figure~\ref{staggered}) is more natural for solving the Navier-Stokes equation, because it increases the order of accuracy of the spatial derivatives involved in solving for the pressure\footnote{This is an oversimplification.  If you want to know the details, look at F\&P}.
+In a standard numerical grid, all the variables are located at cell centers (Figure~\ref{collocated}).  This arrangement is simple to code, but it is not commonly used in Navier-Stokes solvers.  A staggered grid (Figure~\ref{staggered}) is more natural for solving the Navier-Stokes equation, because variables are located such that compact, high-order schemes can be used.
 
 \begin{center}
-\begin{figure*}
+\begin{figure*}[h]
 \center
-\subfloat[Collocated grid]{\label{collocated}\includegraphics[width=0.33\textwidth]{colocated.png} 
+\subfloat[Collocated grid]{\label{collocated}\includegraphics[width=0.45\textwidth]{colocated.png} 
 }  
-\subfloat[Staggered grid]{\label{staggered}\includegraphics[width=0.33\textwidth]{staggered.png} 
+\subfloat[Staggered grid]{\label{staggered}\includegraphics[width=0.45\textwidth]{staggered.png} 
 } 
 \caption{Different types of variable centering on a grid.}
 \label{grid_types}
@@ -310,16 +329,28 @@ In a standard numerical grid, all the variables are located at cell centers (Fig
 \end{center}
 
 \FloatBarrier
-The staggered grid means that each of the four derivatives needed in the advective terms are slightly different.  The $x$-direction advective terms is defined on the left side of cells, at the same point as $u$ (Figure~\ref{staggered}).  To calculate the $\frac{\partial uu}{\partial x}$ term, we can first average $u$ to cell centers, and the take the derivative at the left cell face (Figure~\ref{duudx}).  Similarly, to calculate $\frac{\partial uv}{\partial y}$, we average $u$ and $v$ to cell corners, and then take the derivative at the left cell face (Figure~\ref{duvdy}).  A similar averaging procedure is used for the $y$-direction advection terms (Figure~\ref{y_adv}). 
+The staggered grid means that each of the four derivatives needed in the advective terms are slightly different.  The $x$-direction advective term is defined on the left side of cells, at the same point as $u$ (Figure~\ref{staggered}).  To calculate the $\frac{\partial uu}{\partial x}$ term, we can first average $u$ to cell centers, and the take the derivative at the left cell face (Figure~\ref{duudx}).  Thus we calculate
+\[ u_{\text{minus}} = \frac{1}{2}\left(u_{i-1,j}+u_{i,j} \right) \]
+\[ u_{\text{plus}} = \frac{1}{2}\left(u_{i+1,j}+u_{i,j} \right) \]
+\[ \left.\frac{\partial uu}{\partial x}\right|_{i,j} = \frac{1}{\Delta x}\left( u_{\text{plus}}u_{\text{plus}} - u_{\text{minus}}u_{\text{minus}}\right)\]
+Similarly, to calculate $\frac{\partial uv}{\partial y}$, we average $u$ and $v$ to cell corners, and then take the derivative at the left cell face (Figure~\ref{duvdy}).  The computation is
+
+\[ u_{\text{minus}} = \frac{1}{2}\left(u_{i,j-1}+u_{i,j} \right) \]
+\[ u_{\text{plus}} = \frac{1}{2}\left(u_{i,j+1}+u_{i,j} \right) \]
+\[ v_{\text{minus}} = \frac{1}{2}\left(v_{i-1,j}+v_{i,j} \right) \]
+\[ v_{\text{plus}} = \frac{1}{2}\left(v_{i-1,j+1}+v_{i,j+1} \right) \]
+\[ \left.\frac{\partial uv}{\partial y}\right|_{i,j} = \frac{1}{\Delta y}\left( u_{\text{plus}}v_{\text{plus}} - u_{\text{minus}}v_{\text{minus}}\right)\]
+
+A similar averaging procedure is used for the $y$-direction advection terms (Figure~\ref{y_adv}).  Note that all of these derivatives are centered between the plus and minus velocities, making the derivatives second order.
 
 
 \FloatBarrier
 \begin{center}
-\begin{figure*}
+\begin{figure*}[h]
 \center
-\subfloat[$\frac{\partial uu}{\partial x}$]{\label{duudx}\includegraphics[width=0.33\textwidth]{duudx.png} 
+\subfloat[$\frac{\partial uu}{\partial x}$]{\label{duudx}\includegraphics[width=0.45\textwidth]{duudx.png} 
 }  
-\subfloat[$\frac{\partial uv}{\partial y}$]{\label{duvdy}\includegraphics[width=0.33\textwidth]{duvdy.png} 
+\subfloat[$\frac{\partial uv}{\partial y}$]{\label{duvdy}\includegraphics[width=0.45\textwidth]{duvdy.png} 
 } 
 \caption{First derivatives for $x$ direction advection term.}
 \label{x_adv}
@@ -329,23 +360,31 @@ The staggered grid means that each of the four derivatives needed in the advecti
 \begin{center}
 \begin{figure*}
 \center
-\subfloat[$\frac{\partial vu}{\partial x}$]{\label{dvudx}\includegraphics[width=0.33\textwidth]{dvudx.png} 
+\subfloat[$\frac{\partial vu}{\partial x}$]{\label{dvudx}\includegraphics[width=0.45\textwidth]{dvudx.png} 
 }  
-\subfloat[$\frac{\partial vv}{\partial y}$]{\label{dvvdy}\includegraphics[width=0.33\textwidth]{dvvdy.png} 
+\subfloat[$\frac{\partial vv}{\partial y}$]{\label{dvvdy}\includegraphics[width=0.45\textwidth]{dvvdy.png} 
 } 
 \caption{First derivatives for $x$ direction advection term.}
 \label{y_adv}
 \end{figure*}
 \end{center}
 
-The derivatives needed for the divergence-free / pressure solve are relatively simple.  The divergence is needed at cell centers, which is naturally second-order with face-centered velocities (Figure~\ref{div}). Similarly, the pressure derivatives needed at cell faces are naturally second-order with cell-centered pressure (Figure~\ref{dpdx}).
+\FloatBarrier
+The derivatives needed for the divergence-free / pressure solve are relatively simple.  The divergence is needed at cell centers, which is naturally second-order with face-centered velocities (Figure~\ref{div}). We can compute
 
+\[ \text{divergence}_{i,j} = \frac{1}{\Delta x}\left( u_{i+1,j}-u_{i,j}\right) + \frac{1}{\Delta y}\left( v_{i,j+1}-v_{i,j}\right) \]
+
+Similarly, the pressure derivatives needed at cell faces are naturally second-order with cell-centered pressure (Figure~\ref{dpdx}), computing
+\[ \left.\frac{\partial p}{\partial x}\right|_{i,j} = \frac{1}{\Delta x}\left( p_{i,j} - p_{i-1,j}\right)\]
+\[ \left.\frac{\partial p}{\partial y}\right|_{i,j} = \frac{1}{\Delta y}\left( p_{i,j} - p_{i,j-1}\right)\]
+
+\FloatBarrier
 \begin{center}
 \begin{figure*}
 \center
-\subfloat[divergence]{\label{div}\includegraphics[width=0.33\textwidth]{div.png} 
+\subfloat[divergence]{\label{div}\includegraphics[width=0.45\textwidth]{div.png} 
 }  
-\subfloat[pressure derivatives]{\label{dpdx}\includegraphics[width=0.33\textwidth]{dpdx.png} 
+\subfloat[pressure derivatives]{\label{dpdx}\includegraphics[width=0.45\textwidth]{dpdx.png} 
 } 
 \caption{First derivatives for the divergence-free / pressure solve.}
 \label{pressDeriv}
@@ -356,9 +395,10 @@ The derivatives needed for the divergence-free / pressure solve are relatively s
 
 \FloatBarrier
 \subsection{Boundary conditions}
+\label{BCs}
 When we want to calculate a first derivative of $u_i$ ($u$ at grid point $i$), we require $u_{i+1}$.  If $u_i$ is on an upper boundary, we need to know what to use for $u_{i+1}$ in equation~\ref{firstDeriv}.  The same is true for calculating a second derivative in equation~\ref{secondDeriv}.
 
-BINS uses two kinds of boundary conditions: periodic and moving wall.  Boundary conditions are implemented using "ghost cells" (Figure~\ref{ghostcells}).  Ghost cells are points which lie outside the real solution domain, but are needed to calculate derivatives at the boundaries.  The solution is calculated on the inner domain, and then ghost cells are filled so that derivatives can be taken in the next time step.  Boundary conditions are enforced in \texttt{BCfill.m}.
+BINS uses two kinds of boundary conditions: periodic and moving wall.  Boundary conditions are implemented using ``ghost cells'' (Figure~\ref{ghostcells}).  Ghost cells are points which lie outside the real solution domain, but are needed to calculate derivatives at the boundaries.  The solution is calculated on the inner domain, and then ghost cells are filled so that derivatives can be taken in the next time step.  Boundary conditions are enforced in \texttt{BCfill.m}.
 
 \begin{center}
 \begin{figure*}
@@ -371,7 +411,7 @@ BINS uses two kinds of boundary conditions: periodic and moving wall.  Boundary 
 
 \subsubsection{Periodic boundary condition}
 \label{periodicBCs}
-A periodic boundary condition states that opposite edges of the domain are adjacent (Figure~\ref{torus}).  It is called "periodic" because this boundary condition causes the solution to repeat infinitely, so it becomes periodic with a period equal to the length of the domain.
+A periodic boundary condition states that opposite edges of the domain are adjacent (Figure~\ref{torus}).  It is called ``periodic'' because this boundary condition causes the solution to repeat infinitely, so it becomes periodic with a period equal to the length of the domain.
 \begin{center}
 \begin{figure*}
 \center
@@ -428,70 +468,45 @@ which means that
 \begin{equation}
 u_{\mathrm{ghost}} = 2U_{\mathrm{wall}} - u_1
 \end{equation}
-To set the pressure, we use the approximation to the first derivative in equation~\ref{firstDeriv}, and require
-\[ \frac{p_1 - p_{\mathrm{ghost}}}{dx} = 0\]
-which means that
-\begin{equation}
-p_{\mathrm{ghost}} = p_1
-\end{equation}
-
-%----------------------------------------------------------------------
-\section{BINS reference: by function name}
-%----------------------------------------------------------------------
-This section provides a function-by-function breakdown of the components that make BINS work.
-
-\includegraphics[width=\textwidth]{callGraph.png} 
-
-\subsection{\texttt{advectionTerm}}
-This function estimates the advection term of the Navier Stokes equation.
-
-\subsection{\texttt{BINS}}
-The main function is \texttt{BINS}, located in \texttt{BINS.m}.  It takes...  It calls the functions needed to advance the solution in time.
-
-%----------------------------------------------------------------------
-\section{BINS reference: by filename}
-%----------------------------------------------------------------------
-This section provudes a file-by-file breakdown of the components that make BINS work.
-
-\subsection{\texttt{advance.m}}
-This file contains the functions needed to advance the solution in time.
-
-\subsection{\texttt{BINS.m}}
-This file contains only one function, \texttt{BINS}, the main function of BINS.
+%To set the pressure, we use the approximation to the first derivative in equation~\ref{firstDeriv}, and require
+%\[ \frac{p_1 - p_{\mathrm{ghost}}}{dx} = 0\]
+%which means that
+%\begin{equation}
+%p_{\mathrm{ghost}} = p_1
+%\end{equation}
+Because we set the velocity perpendicular to the wall to be equal to zero on the wall, we do not need the pressure in the ghost cells.  That pressure would only have been used for correcting the velocity perpendicular to the wall, but the resulting value is overwritten by the boundary condition.
 
 %----------------------------------------------------------------------
 \section{Known limitations/bugs}
 %----------------------------------------------------------------------
 \begin{itemize}
 \item Code assumes $\Delta x=\Delta y$
+\item Code assumes $T = k\Delta t$ for integer $k$
 \item Code requires $L_x = L_y$ and $N_x = N_y$
 \item Multigrid doesn't work correctly yet
-\item Only rectangular domains can be used
-\item convergence test should include $v$ in the error
-\item moving wall BC not thoroughly checked
-\item errors near boundaries: BC filling bug?
+\item Only square domains can be used
 \end{itemize}
 
 %----------------------------------------------------------------------
 \section{Validation}
 %----------------------------------------------------------------------
 We have validated BINS using the Taylor-Green vortex.  This solution is excellent for validating 2D, incompressible Navier-Stokes solvers because it is time-varying , with a fairly complex structure, but still has an exact solution.  
-The exact solution on a periodic domain of dimension $[0,2\pi] \times [0,1\pi]$ is
+The exact solution on a periodic domain of dimension $[0,2\pi] \times [0,2\pi]$ is
 \[ u=\sin (x) \cos (y) F(t)\]
 \[ v=-\cos (x) \sin (y) F(t)\]
 \[ F(t)=e^{-2\nu t}\]
 
 \subsection{Comparison with exact solution}
-For a first check, we can look at the difference between the numerical and exact solution (Figure~\ref{error}).  These plots show that most of the error is small, about 5\% of the maximum function value (which is 1).  The concentration of error near the boundaries suggests a guardcell error.
+For a first check, we can look at the difference between the numerical and exact solution using \texttt{compTest.m} (Figure~\ref{error}).  These plots show that most of the error is small, about 1\% of the maximum function value (which is $e^{2\nu T}=0.8$).
 
 \begin{center}
 \begin{figure*}
 \center
-\subfloat[$u$ error]{\label{uerr}\includegraphics[width=0.33\textwidth]{u_error.png} 
+\subfloat[$u$ error]{\label{uerr}\includegraphics[width=0.45\textwidth]{u_error.png} 
 }  
-\subfloat[$v$ error]{\label{verr}\includegraphics[width=0.33\textwidth]{v_error.png} 
+\subfloat[$v$ error]{\label{verr}\includegraphics[width=0.45\textwidth]{v_error.png} 
 } 
-\caption{Absolute error at $t=0.1$ on a grid of size $N=70$.}
+\caption{Absolute error at $t=1$ on a grid of size $N=70$.}
 \label{error}
 \end{figure*}
 \end{center}
@@ -499,16 +514,317 @@ For a first check, we can look at the difference between the numerical and exact
 \subsection{Convergence test}
 A common test is to observe how the solution accuracy increases with decreasing grid spacing.  The rate at which the error decreases is called the convergence rate, also known as the order of accuracy of the solution algorithm.  
 
-Difference schemes have different convergence rates, which can be calculated theoretically.  For example, the forward Euler timestepping used in BINS is first-order, while the spatial differences are second order\footnote{The first derivatives are only second order accurate because of the staggered grid.}.  But what is the order of accuracy of BINS?
+Difference schemes have different convergence rates, which can be calculated theoretically.  For example, the forward Euler timestepping used in BINS is first-order, while the spatial differences are second order\footnote{The first derivatives are second order accurate because of the staggered grid.}.  But what is the order of accuracy of BINS?
 
-We can measure the order of accuracy of our real code using a convergence test.  We solve the same test problem, the Taylor-Green vortex, up to the same time for a range of spatial and time steps.  We calculate the error of our solution, using the known exact solution.  We can now plot the error as a function of the grid spacing/time step (Figure~\ref{conv}).  The order of accuracy of our code is the slope of the best fit line through this plot.  This plot shows the order to be 0.95, which is close to the order 1 predicted by using forward Euler time stepping.
+We can measure the order of accuracy of our real code using a convergence test in \texttt{convTest.m}.  We solve the same test problem, the Taylor-Green vortex, up to time $t=0.1$ for a range of spatial and time steps.  We calculate the error of our solution, using the known exact solution.  We can now plot the error as a function of the grid spacing/time step (Figure~\ref{conv}).  The order of accuracy of our code is the slope of the best fit line through this plot.  This plot shows the order to be 1.11, which is close to the order 1 predicted by using forward Euler time stepping.
 
 \begin{figure}
 \center
 \includegraphics[width=.7\textwidth]{conv.png} 
-\caption{Order = 0.95}
+\caption{Convergence test for BINS, order = 1.11.}
 \label{conv}
 \end{figure}
+
+
+\FloatBarrier
+%----------------------------------------------------------------------
+\section{BINS reference: by function name}
+%----------------------------------------------------------------------
+This section provides a function-by-function breakdown of the components that make BINS work.  You can see a map of how the functions call each other in a call graph (Figure~\ref{callGraph}).
+
+\begin{figure}
+\center
+\includegraphics[width=\textwidth]{callGraph.png} 
+\caption{Call graph for BINS.}
+\label{callGraph}
+\end{figure}
+
+\subsection{\texttt{adv\_duudx}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[Called by:] \hfill \\ \texttt{advection}
+\item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$
+\item[Outputs:] \hfill \\ $duudx$: advection term $\frac{\partial uu}{\partial x}$
+\item[Calls:] \hfill \\ nothing
+\end{description}
+This function calculates one first derivative required for the advection term of the x-momentum equation.
+
+\subsection{\texttt{adv\_duvdy}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[Called by:] \hfill \\ \texttt{advection}
+\item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\$h$: spatial step $\Delta x = \Delta y$
+\item[Outputs:] \hfill \\ $duvdy$: advection term $\frac{\partial uv}{\partial y}$
+\item[Calls:] \hfill \\ nothing
+\end{description}
+This function calculates one first derivative required for the advection term of the x-momentum equation.
+
+\subsection{\texttt{adv\_dvudx}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[Called by:] \hfill \\ \texttt{advection}
+\item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\$h$: spatial step $\Delta x = \Delta y$
+\item[Outputs:] \hfill \\ $dvudx$: advection term $\frac{\partial vu}{\partial x}$
+\item[Calls:] \hfill \\ nothing
+\end{description}
+This function calculates one first derivative required for the advection term of the y-momentum equation.
+
+\subsection{\texttt{adv\_dvvdy}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[Called by:] \hfill \\ \texttt{advection}
+\item[Inputs:] \hfill \\ $v$: $y$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$
+\item[Outputs:] \hfill \\ $dvvdy$: advection term $\frac{\partial vv}{\partial y}$
+\item[Calls:] \hfill \\ nothing
+\end{description}
+This function calculates one first derivative required for the advection term of the y-momentum equation.
+
+\subsection{\texttt{advection}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{advance.m}
+\item[Called by:] \hfill \\ \texttt{BINS}
+\item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$ 
+\item[Outputs:] \hfill \\ $u\_advection$: $x$-direction advection term \\ $v\_advection$: $y$-direction advection term 
+\item[Calls:] \hfill \\ \texttt{adv\_duudx} \\ \texttt{adv\_duvdy} \\ \texttt{adv\_dvudx} \\ \texttt{adv\_dvvdy}
+\end{description}
+
+This function  estimates the advection term of the x- and y-momentum equations.
+
+\[ \text{advection term for x-momentum equation} = \frac{\partial uu}{\partial x} + \frac{\partial vu}{\partial y} \]
+\[ \text{advection term for y-momentum equation} = \frac{\partial uv}{\partial x} + \frac{\partial vv}{\partial y} \]
+
+
+\subsection{\texttt{BINS}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{BINS.m}
+\item[Called by:] \hfill \\ none
+\item[Inputs:] \hfill \\ $N$: number of cells in $x$ and $y$ \\ $L$: physical dimension in $x$ and $y$ \\ $dt$: time step \\ $T$: final time \\ $BC$: vector of boundary conditions \\ $IC\_choice$: flag choosing predefined IC \\ $nu$: molecular kinematic viscosity \\ $ng$: number of ghost cells
+\item[Outputs:] \hfill \\ none
+\item[Calls:] \hfill \\ \texttt{IC} \\ \texttt{fillBC} \\ \texttt{advection} \\ \texttt{diffusion} \\ \texttt{predict} \\ \texttt{pressure} \\ \texttt{correct} \\ \texttt{plotSoln}
+\end{description}
+This is the main function.  It calls the functions needed to advance the solution in time, and plots the solution at the last timestep.
+
+\subsection{\texttt{correct}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{advance.m}
+\item[Called by:] \hfill \\ \texttt{BINS}
+\item[Inputs:] \hfill \\ $uStar$: predicted $x$-direction velocity \\ $vStar$: predicted $y$-direction velocity \\ $newP$: pressure at next time step \\ $h$: spatial step $\Delta x = \Delta y$ \\ $dt$: time step
+\item[Outputs:] \hfill \\ $uNext$: $x$-direction velocity at next time step \\ $vNext$: $y$-direction velocity at next time step
+\item[Calls:] \hfill \\ \texttt{correct\_dpdx} \\ \texttt{correct\_dpdy}
+\end{description}
+This function corrects the next step velocity estimated in \texttt{predict} using the next step pressure calculated in \texttt{pressure} using equations~\ref{correctx} and~\ref{correcty}:
+
+\[ u^{n+1}= u^* - \Delta t\frac{\partial p^{n+1}}{\partial x} \]
+\[ v^{n+1}= v^* - \Delta t\frac{\partial p^{n+1}}{\partial y} \]
+
+\subsection{\texttt{correct\_dpdx}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[Called by:] \hfill \\ \texttt{correct}
+\item[Inputs:] \hfill \\ $p$: pressure \\ $h$: spatial step $\Delta x = \Delta y$
+\item[Outputs:] \hfill \\ $dpdx$: $\frac{\partial p}{\partial x}$
+\item[Calls:] \hfill \\ none
+\end{description}
+This function calculates the pressure derivative
+\[ \frac{\partial p}{\partial x}\]
+needed in the correction step in function \texttt{correct}.
+
+\subsection{\texttt{correct\_dpdy}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[Called by:] \hfill \\ \texttt{correct}
+\item[Inputs:] \hfill \\ $p$: pressure \\ $h$: spatial step $\Delta x = \Delta y$
+\item[Outputs:] \hfill \\ $dpdy$: $\frac{\partial p}{\partial y}$
+\item[Calls:] \hfill \\ none
+\end{description}
+This function calculates the pressure derivative
+\[ \frac{\partial p}{\partial y}\]
+needed in the correction step in function \texttt{correct}.
+
+\subsection{\texttt{diffusion}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{advance.m}
+\item[Called by:] \hfill \\ \texttt{BINS}
+\item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$ \\ $nu$: molecular kinematic viscosity
+\item[Outputs:] \hfill \\ $u\_diffusion$: $x$-direction diffusion term \\ $v\_diffusion$: $y$-direction diffusion term 
+\item[Calls:] \hfill \\ \texttt{secondDeriv}
+\end{description}
+This function calculates the diffusion term of the x- and y-momentum equations.
+\[ \text{diffusion term for x-momentum equation} = \nu \left(\frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right) \]
+\[ \text{diffusion term for y-momentum equation} = \nu \left(\frac{\partial^2 v}{\partial x^2} + \frac{\partial^2 v}{\partial y^2}\right) \]
+\subsection{\texttt{divergence}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[Called by:] \hfill \\ \texttt{pressure}
+\item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$ 
+\item[Outputs:] \hfill \\ $divOut$: divergence of input velocity field $(u,v)$
+\item[Calls:] \hfill \\ none
+\end{description}
+This function calculates the divergence of the intermediate, predicted velocity field $(u^*,v^*)$
+\[ \text{divergence} = \frac{\partial u^*}{\partial x} + \frac{\partial v^*}{\partial y}\]
+This is needed to calculate the next time step pressure in the function \texttt{pressure}.
+
+\subsection{\texttt{fillBC}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{fillBC.m}
+\item[Called by:] \hfill \\ \texttt{BINS}
+\item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\ $p$: pressure \\ $h$: spatial step $\Delta x = \Delta y$ \\ $ng$: number of ghost cells \\ $N$: number of cells in $x$ and $y$ \\ $BC$: vector defining boundary conditions
+\item[Outputs:] \hfill \\ $uOut$: input $u$ with filled ghost cells \\ $vOut$: input $v$ with filled ghost cells \\ $pOut$: input $p$ with filled ghost cells
+\item[Calls:] \hfill \\ none
+\end{description}
+This function fills the ghost cells of the variables $u$, $v$, and $p$, while enforcing the boundary conditions.  For more details on the boundary conditions, see section~\ref{BCs}.
+
+\subsection{\texttt{IC}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{IC.m}
+\item[Called by:] \hfill \\ \texttt{BINS}
+\item[Inputs:] \hfill \\ $L$: length of domain in $x$ and $y$ \\ $N$: number of grid cells in $x$ and $y$ \\ $ng$: number of ghost cells \\ $IC\_choice$: flag defining choice of predefined initial condition
+\item[Outputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\ $p$: pressure
+\item[Calls:] \hfill \\ none
+\end{description}
+This function is in the file \texttt{IC.m}.  It initializes the $u$, $v$, and $p$ variables with pre-set initial condition.  The default options are
+\begin{enumerate}
+\item $u$ = 0, $v$ = 0, $p$ = 0
+\item $u$ = 1, $v$ = 1, $p$ = 0
+\item Taylor-Green vortex 
+\[ u = \sin(x)\cos(y)\]
+\[ v = -\cos(x)\sin(y)\]
+\[ p = \frac{1}{4}\left( \cos(2x) + \cos(2y) \right)\]
+\item shear flow
+\[ u = \begin{cases} \tanh\left(30(y-\frac{1}{4})\right) & \text{if } y \le \frac{L}{2} \\ \tanh\left(30(\frac{3}{4}-y)\right) & \text{otherwise} \end{cases}\]
+\[ v = \frac{1}{20}\sin(2\pi x)\]
+\[ p = 0\]
+\end{enumerate}
+
+\subsection{\texttt{make\_matrix}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{make\_matrix.m}
+\item[Called by:] \hfill \\ \texttt{poissonSolve}
+\item[Inputs:] \hfill \\ $bigM$: size of matrix $= N^2$ \\ $N$: number of grid points in $x$ and $y$ \\ $ng$: number of ghost cells \\ $h$: grid spacing $\Delta x = \Delta y$ \\ $Mlookup$: table for finding $(i,j)$ coordinate of point in matrix $A$ or vector $f$ \\ $m$: table for finding location of point in matrix $A$ or vector $f$ from $(i,j)$ coordinate \\ $rhs$: right hand side of Poisson equation \\ $BC$: vector of boundary conditions
+\item[Outputs:] \hfill \\ $A$: matrix of Poisson equation \\ $f$: vector of Poisson equation
+\item[Calls:] \hfill \\ none
+\end{description}
+This function generates the $A$ matrix and $f$ vector that define the matrix equation
+\[ Ap^{n+1} = f\]
+that encodes the Poisson equation
+\[ \nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x} + \frac{\partial v^*}{\partial y} \right) \]
+For details, see section~\ref{poissonSolve}.
+
+\subsection{\texttt{plotSoln}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{plotSoln.m}
+\item[Called by:] \hfill \\ \texttt{BINS}
+\item[Inputs:] \hfill \\  $u$: $x$-direction velocity \\ $v$: $y$-direction velocity\\ $ng$: number of ghost cells \\ $L$: size of domain in $x$ and $y$ \\ $N$: number of cells in $x$ and $y$ \\ $h$: spatial step $\Delta x = \Delta y$ 
+\item[Outputs:] \hfill \\ none
+\item[Calls:] \hfill \\ none
+\end{description}
+This function plots the velocities $u$ and $v$ at end time $T$.
+
+\subsection{\texttt{poissonSolve}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{poissonSolve.m}
+\item[Called by:] \hfill \\ \texttt{pressure}
+\item[Inputs:] \hfill \\  $rhs$: right hand side to Poisson equation \\ $h$: spatial step $\Delta x = \Delta y$ \\ $BC$: vector defining boundary conditions \\ $ng$: number of ghost cells \\ $N$: number of cells in $x$ and $y$
+\item[Outputs:] \hfill \\ $solution$: solution to Poisson equation
+\item[Calls:] \hfill \\ \texttt{make\_matrix} \\ \texttt{Matlab \textbackslash}
+\end{description}
+This function solves the Poisson equation
+\[ \nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x} + \frac{\partial v^*}{\partial y} \right) \]
+by encoding it as a matrix inversion
+\[ Ap^{n+1} = f\]
+and then solving
+\[ p^{n+1} = A^{-1}f\]
+
+\subsection{\texttt{predict}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{advance.m}
+\item[Called by:] \hfill \\ \texttt{BINS}
+\item[Inputs:] \hfill \\ $u$: $x$-direction velocity\\$v$: $y$-direction velocity\\ $u\_advection$: $x$-direction advection term \\ $v\_advection$: $y$-direction advection term \\$u\_diffusion$: $x$-direction diffusion term \\$v\_diffusion$: $y$-direction diffusion term \\$dt$: time step
+\item[Outputs:] \hfill \\ $uStar$: intermediate $x$-direction velocity \\ $vStar$: intermediate $y$-direction velocity
+\item[Calls:] \hfill \\ none
+\end{description}
+This function predicts the next time step velocity using equations~\ref{predictx} and~\ref{predicty}:
+\[ 
+ \frac{\partial u^*}{\partial t} =   -\frac{\partial u^n u^n}{\partial x} -\frac{\partial u^n v^n}{\partial y} + \nu\left( \frac{\partial^2 u^n}{\partial x^2} + \frac{\partial^2 u^n}{\partial y^2}  \right)  \]
+
+\[
+  \frac{\partial v^*}{\partial t} =   -\frac{\partial v^n u^n}{\partial x} -\frac{\partial v^n v^n}{\partial y} + \nu\left( \frac{\partial^2 v^n}{\partial x^2} + \frac{\partial^2 v^n}{\partial y^2}  \right)
+\]
+This uses only the advection and diffusion terms, so the pressure gradient is not included.  At the end of this step, the intermediate velocity field $(u^*,v^*)$ is not divergence-free, i.e. mass is not conserved.
+
+\subsection{\texttt{pressure}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{advance.m}
+\item[Called by:] \hfill \\ \texttt{BINS}
+\item[Inputs:] \hfill \\ $uStar$: intermediate $x$-direction velocity \\ $vStar$: intermediate $y$-direction velocity \\ $p$: pressures \\ $h$: spatial step $\Delta x = \Delta y$ \\ $dt$: time step \\ $ng$: number of ghost cells \\ $BC$: vector defining boundary conditions \\ $N$: number of cells in $x$ and $y$
+\item[Outputs:] \hfill \\ $newP$: pressure at next time step
+\item[Calls:] \hfill \\ \texttt{divergence} \\ \texttt{poissonSolve}
+\end{description}
+This function solves for the pressure at the next time step.
+
+\subsection{\texttt{secondDeriv}}
+\begin{description}
+\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[Called by:] \hfill \\ \texttt{diffusion}
+\item[Inputs:] \hfill \\ $u$: velocity (could be $x$- or $y$-direction) \\ $v$: $y$-direction velocity \\ $dir$: direction of derivative  \\ $h$: spatial step $\Delta x = \Delta y$ 
+\item[Outputs:] \hfill \\ $divOut$: second derivative of input velocity field
+\item[Calls:] \hfill \\ none
+\end{description}
+This function calculates the unmixed second derivatives of the velocity field for use in the diffusion term.
+
+%----------------------------------------------------------------------
+\section{BINS reference: by filename}
+%----------------------------------------------------------------------
+This section provudes a file-by-file breakdown of the components that make BINS work.
+
+\subsection{\texttt{advance.m}}
+\begin{description}
+\item[Functions:] \hfill \\ \texttt{advection} \\ \texttt{diffusion} \\ \texttt{predict} \\  \texttt{pressure} \\  \texttt{correct}
+\end{description}
+This file contains the functions needed to advance the solution in time.
+
+\subsection{\texttt{BINS.m}}
+This file contains the function \texttt{BINS}, the main function of BINS.
+
+\subsection{\texttt{calculus.m}}
+\begin{description}
+\item[Functions:] \hfill \\ \texttt{adv\_duudx} \\ \texttt{adv\_duvdy} \\ \texttt{adv\_dvudx} \\  \texttt{adv\_dvvdy}  \\ \texttt{secondDeriv} \\ \texttt{divergence} \\ \texttt{correct\_dpdx} \\ \texttt{correct\_dpdy}
+\end{description}
+This file contains the functions needed to estimate spatial derivatives numerically.
+
+\subsection{\texttt{cavity.m}}
+This file contains a script that solves a driven lid cavity problem, which is intended to demonstrate the solid wall boundary conditions.
+
+\subsection{\texttt{compTest.m}}
+This file contains a script that compares the Taylor-Green vortex solution found in \texttt{BINS} to its analytical solution.
+
+\subsection{\texttt{convTest.m}}
+This file contains a script that performs a convergence test of \texttt{BINS}.  It calculates the error for each grid spacing by comparing the Taylor-Green vortex solution found in \texttt{BINS} to its analytical solution.
+
+\subsection{\texttt{fillBC.m}}
+This file contains the function \texttt{fillBC}, which fills the ghostcells of $u$, $v$, and $p$ to enforce boundary conditions.
+
+\subsection{\texttt{IC.m}}
+This file contains the function \texttt{IC}, which initializes $u$, $v$, and $p$ with predefined values.
+
+\subsection{\texttt{intro.m}}
+This file contains a script that solves the Taylor-Green vortex.  It is intended to introduce how \texttt{BINS} is called.
+
+\subsection{\texttt{make\_matrix.m}}
+This file contains the function \texttt{make\_matrix}, which generates the matrix inversion problem used to solve the Poisson pressure equation.
+
+\subsection{\texttt{multigrid.m}}
+This file is not currently in use.
+
+\subsection{\texttt{plotSoln.m}}
+This file contains the function \texttt{plotSoln}, which plots $u$ and $v$ at the final time $T$.
+
+\subsection{\texttt{poissonSolve.m}}
+This file contains the function \texttt{poissonSolve}, which solves the Poisson pressure equation.
+
+\subsection{\texttt{shear.m}}
+This file contains a script that solves a shear flow problem, which is intended to demonstrate the shear flow initial condition.
+
 
 
 \end{document}

@@ -42,11 +42,11 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 	
-			endif		
+			end	
 		% upper x boundary-------------------------------------------------------------------------------
 		elseif i==N &&  j>1 && j < N
 			if BC(2)==sqrt(-1) % periodic BC
-                                        			A(Midx, m(i-1,j) ) = 1; 
+                                A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
@@ -55,11 +55,11 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(N-1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
-			endif
+			end
 		% lower y boundary-------------------------------------------------------------------------------
 		elseif i>1 && i < N && j==1 
 			if BC(3)==sqrt(-1) % periodic BC
-                                        			A(Midx, m(i-1,j) ) = 1; 
+                                A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,N) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
@@ -68,11 +68,11 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,2) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
-			endif
+			end
 		% upper y boundary-------------------------------------------------------------------------------
 		elseif i>1 && i < N &&  j==N 
 			if BC(4)==sqrt(-1) % periodic BC
-                                        			A(Midx, m(i-1,j) ) = 1; 
+                                A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,1) ) = 1; 
@@ -81,7 +81,7 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,N-1) ) = 1; 
-			endif
+			end
 		% lower left corner------------------------------------------------------------------------------
 		elseif i==1 && j==1 
 			if BC(1)==sqrt(-1) % periodic  BC
@@ -97,7 +97,7 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,2) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
-			endif
+			end
 		% upper left corner------------------------------------------------------------------------------
 		elseif i==1 && j==N 
 			if BC(1)==sqrt(-1) % periodic BC
@@ -110,7 +110,7 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,N-1) ) = 1; 
-			endif
+			end
 		% lower right corner-----------------------------------------------------------------------------
 		elseif i==N && j==1 
 			if BC(1)==sqrt(-1) % periodic BC
@@ -123,7 +123,7 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(N-1,j) ) = 1; 
 				A(Midx, m(i,2) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
-			endif
+			end
 		% upper right corner-----------------------------------------------------------------------------
 		elseif i==N && j==N 
 			if BC(1)==sqrt(-1) % periodic BC
@@ -136,8 +136,8 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(N-1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,N-1) ) = 1; 
-			endif
-		endif
-	endfor % loop over rows in matrix A
+			end
+		end
+	end % loop over rows in matrix A
 	
-endfunction
+end

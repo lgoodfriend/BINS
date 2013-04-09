@@ -26,7 +26,7 @@ function [uOut,vOut,pOut] = fillBC(u,v,p,ng,N,BC);
 			uOut(gcell,:) = 0; uOut(gcell+1,:) = 0; 
 			vOut(gcell,:) = 2*BC(1) - v(ng+1,:);
 			pOut(gcell,:) = p(ng+1,:);
-		endif
+		end
 		% upper x BC-------------------------------------------------------------------------------------
 		if BC(2)==sqrt(-1) % periodic, filled with lower x inner data
 			uOut(N+ng+gcell,:) = u(ng+gcell,:);
@@ -37,7 +37,7 @@ function [uOut,vOut,pOut] = fillBC(u,v,p,ng,N,BC);
 			uOut(N+ng+gcell,:) = 0; uOut(N+ng,:) = 0; 
 			vOut(N+ng+gcell,:) = 2*BC(2) - v(ng+N,:);
 			pOut(N+ng+gcell,:) = p(ng+N,:);
-		endif
+		end
 		% lower y BC-------------------------------------------------------------------------------------
 		if BC(3)==sqrt(-1) % periodic, filled with upper y inner data
 			uOut(:,gcell) = u(:,N+gcell);
@@ -48,7 +48,7 @@ function [uOut,vOut,pOut] = fillBC(u,v,p,ng,N,BC);
 			uOut(:,gcell) = 2*BC(3) - u(:,ng+1);
 			vOut(:,gcell) = 0; vOut(:,gcell+1) = 0;
 			pOut(:,gcell) = p(:,ng+1);
-		endif
+		end
 		% upper y BC-------------------------------------------------------------------------------------
 		if BC(4)==sqrt(-1) % periodic, filled with lower y inner data
 			uOut(:,N+ng+gcell) = u(:,ng+gcell);
@@ -59,7 +59,7 @@ function [uOut,vOut,pOut] = fillBC(u,v,p,ng,N,BC);
 			uOut(:,N+ng+gcell) = 2*BC(4) - u(:,N+gcell);
 			vOut(:,N+ng+gcell) = 0; vOut(:,N+ng) = 0;
 			pOut(:,N+ng+gcell) = p(:,N+gcell);
-		endif
-	endfor % loop over ghost cells
+		end
+	end % loop over ghost cells
 
-endfunction
+end

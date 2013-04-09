@@ -2,9 +2,6 @@
 clear all
 close all
 
-advance
-calculus
-
 % choose solution parameters--------------------------------------------------------------------------
 L = 2*pi; % length of domain
 N = 40; % number of points in domain

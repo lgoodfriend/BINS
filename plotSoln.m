@@ -36,4 +36,4 @@ function plotSoln(u,v,ng,L,N,h)
 	grid off
 	xlim([0 L]); ylim([0 L]);
 	 
-endfunction
+end

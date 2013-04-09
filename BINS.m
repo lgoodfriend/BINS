@@ -8,7 +8,7 @@
 
 function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 % solves the 2D incompressible Navier-Stokes equations
-% for an overview of the algorithm used here, see Section 3.2 on page 4
+% for an overview of the algorithm used here, see Section 3.2 on page 5
 %
 % inputs: 
 % N = number of cells in x and y 
@@ -52,16 +52,16 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 
 		% update the time
 		t=t+dt;
-	endwhile
+	end
 
 	% plot the solution!
 	plotSoln(u,v,ng,L,N,h)
 
-                        % same the end time data in case we want it again
-                        T = t;
+        % save the end time data in case we want it again
+        T = t;
 	save( ['./BINS_output',int2str(N),'.mat'], ...
 	             'u','v', 'p', 'ng', 'nu', 'L', 'N', 'T');
 
-endfunction
+end
 
 

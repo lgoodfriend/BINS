@@ -134,7 +134,7 @@ since, using equation~\ref{poisson},
 &= 0 \\
 \end{align*}
 
-These steps appear in the functions in the file \texttt{advance.m}.  In the $\texttt{predict}$ function, the next time step velocity is estimated following equations~\ref{predictx} and~\ref{predicty}.  This step uses the advection and diffusion terms, calculated in subroutines \texttt{advection} and \texttt{diffusion} respectively.  The Poisson equation for pressure in equation~\ref{poisson} is solved in the function $\texttt{pressure}$.  The next time step velocity is then calculated by correcting the predicted velocity in function \texttt{correct}, as in equations~\ref{correctx} and~\ref{correcty}.  These steps are outlined below.
+These steps appear in the files \texttt{advection.m}, \texttt{diffusion.m}, \texttt{predict.m}, \texttt{pressure.m}, and \texttt{correct.m}.  In the $\texttt{predict}$ function, the next time step velocity is estimated following equations~\ref{predictx} and~\ref{predicty}.  This step uses the advection and diffusion terms, calculated in subroutines \texttt{advection} and \texttt{diffusion} respectively.  The Poisson equation for pressure in equation~\ref{poisson} is solved in the function $\texttt{pressure}$.  The next time step velocity is then calculated by correcting the predicted velocity in function \texttt{correct}, as in equations~\ref{correctx} and~\ref{correcty}.  These steps are outlined below.
 
 \renewcommand\arraystretch{2.5}
 \begin{center}
@@ -142,18 +142,18 @@ These steps appear in the functions in the file \texttt{advance.m}.  In the $\te
 \hline 
 \bf{Component} & \bf{Math} & \bf{Function} & \bf{File}\\ 
 \hline 
-advection term & \Large{$\frac{\partial u u}{\partial x} + \frac{\partial u v}{\partial y}$}  & \texttt{advection} & \texttt{advance.m}\\ 
+advection term & \Large{$\frac{\partial u u}{\partial x} + \frac{\partial u v}{\partial y}$}  & \texttt{advection} & \texttt{advection.m}\\ 
  & \Large{$\frac{\partial v u}{\partial x} + \frac{\partial v v}{\partial y}$}  &  & \\ 
 \hline 
-diffusion term & \Large{$\nu\left( \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right)$} & \texttt{diffusion} & \texttt{advance.m} \\ 
+diffusion term & \Large{$\nu\left( \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right)$} & \texttt{diffusion} & \texttt{diffusion.m} \\ 
  &  \Large{$\nu\left( \frac{\partial^2 v}{\partial x^2} + \frac{\partial^2 v}{\partial y^2}\right)$} &  &  \\
 \hline 
-next time step: & \Large{$ \frac{\partial u^*}{\partial t} =   -\frac{\partial u^n u^n}{\partial x} -\frac{\partial u^n v^n}{\partial y} + \nu\left( \frac{\partial^2 u^n}{\partial x^2} + \frac{\partial^2 u^n}{\partial y^2} \right)$} & \texttt{predict}& \texttt{advance.m} \\ 
+next time step: & \Large{$ \frac{\partial u^*}{\partial t} =   -\frac{\partial u^n u^n}{\partial x} -\frac{\partial u^n v^n}{\partial y} + \nu\left( \frac{\partial^2 u^n}{\partial x^2} + \frac{\partial^2 u^n}{\partial y^2} \right)$} & \texttt{predict}& \texttt{predict.m} \\ 
  velocity prediction & \Large{$ \frac{\partial v^*}{\partial t} =   -\frac{\partial v^n u^n}{\partial x} -\frac{\partial v^n v^n}{\partial y} + \nu\left( \frac{\partial^2 v^n}{\partial x^2} + \frac{\partial^2 v^n}{\partial y^2} \right)$} &  &   \\ 
 \hline 
-next time step: pressure & \Large{$\nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x}+\frac{\partial v^*}{\partial y} \right)$} & \texttt{pressure} & \texttt{advance.m}\\ 
+next time step: pressure & \Large{$\nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x}+\frac{\partial v^*}{\partial y} \right)$} & \texttt{pressure} & \texttt{pressure.m}\\ 
 \hline 
-next time step: velocity & \Large{$u^{n+1}= u^* - \Delta t\frac{\partial p^{n+1}}{\partial x}$} & \texttt{correct}& \texttt{advance.m} \\ 
+next time step: velocity & \Large{$u^{n+1}= u^* - \Delta t\frac{\partial p^{n+1}}{\partial x}$} & \texttt{correct}& \texttt{correct.m} \\ 
   & \Large{$v^{n+1}= v^* - \Delta t\frac{\partial p^{n+1}}{\partial y}$} &  &   \\ 
 \hline 
 \end{tabular} 
@@ -184,7 +184,7 @@ and for the y-momentum equation,
 \hline 
 \bf{Component} & \bf{Math} & \bf{Function} & \bf{File}\\ 
 \hline 
-time step & \Large{$\frac{\partial u}{\partial t}$} & \texttt{predict}& \texttt{advance.m} \\ 
+time step & \Large{$\frac{\partial u}{\partial t}$} & \texttt{predict}& \texttt{predict.m} \\ 
  & \Large{$\frac{\partial v}{\partial t}$} &  &   \\ 
 \hline 
 \end{tabular} 
@@ -202,28 +202,28 @@ and second derivatives as
 \frac{\partial^2 u}{\partial x^2} = \frac{u_{i+1} -2 u_i + u_{i+1}}{\Delta x^2}
 \end{equation} 
 
-Subroutines to calculate spatial derivatives are found in the file \texttt{calculus.m}.  BINS has a different function for each first derivative used, because the staggered grid makes the indexing for each derivative slightly different.  This first derivative ends up being second-order because of the staggered grid. For details on how the first derivatives are implemented, see section~\ref{staggeredGrid}.
+Subroutines to calculate spatial derivatives are found in the same file as the function that calls them.  BINS has a different function for each first derivative used, because the staggered grid makes the indexing for each derivative slightly different.  This first derivative ends up being second-order because of the staggered grid. For details on how the first derivatives are implemented, see section~\ref{staggeredGrid}.
 
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
 \hline 
 \bf{Component} & \bf{Math} & \bf{Function} & \bf{File}\\ 
 \hline 
-first derivative: advection term & \Large{$\frac{\partial uu}{\partial x}$} & \texttt{adv\_duudx} & \texttt{calculus.m}\\ 
+first derivative: advection term & \Large{$\frac{\partial uu}{\partial x}$} & \texttt{adv\_duudx} & \texttt{advection.m}\\ 
 \hline 
-first derivative: advection term & \Large{$\frac{\partial uv}{\partial y}$} & \texttt{adv\_duvdy} & \texttt{calculus.m}\\ 
+first derivative: advection term & \Large{$\frac{\partial uv}{\partial y}$} & \texttt{adv\_duvdy} & \texttt{advection.m}\\ 
 \hline 
-first derivative: advection term & \Large{$\frac{\partial vu}{\partial x}$} & \texttt{adv\_dvudx} & \texttt{calculus.m}\\ 
+first derivative: advection term & \Large{$\frac{\partial vu}{\partial x}$} & \texttt{adv\_dvudx} & \texttt{advection.m}\\ 
 \hline 
-first derivative: advection term & \Large{$\frac{\partial vv}{\partial y}$} & \texttt{adv\_dvvdy} & \texttt{calculus.m}\\ 
+first derivative: advection term & \Large{$\frac{\partial vv}{\partial y}$} & \texttt{adv\_dvvdy} & \texttt{advection.m}\\ 
 \hline 
-first derivative: pressure correction & \Large{$\frac{\partial p}{\partial x}$} & \texttt{correct\_dpdx} & \texttt{calculus.m}\\ 
+first derivative: pressure correction & \Large{$\frac{\partial p}{\partial x}$} & \texttt{correct\_dpdx} & \texttt{correct.m}\\ 
 \hline
-first derivative: pressure correction & \Large{$\frac{\partial p}{\partial y}$} & \texttt{correct\_dpdy} & \texttt{calculus.m}\\ 
+first derivative: pressure correction & \Large{$\frac{\partial p}{\partial y}$} & \texttt{correct\_dpdy} & \texttt{correct.m}\\ 
 \hline
-first derivative: divergence & \Large{$\frac{\partial u}{\partial x} + \frac{\partial v}{\partial y}$} & \texttt{divergence} & \texttt{calculus.m}\\ 
+first derivative: divergence & \Large{$\frac{\partial u}{\partial x} + \frac{\partial v}{\partial y}$} & \texttt{divergence} & \texttt{pressure.m}\\ 
 \hline
-second derivative & \Large{$\frac{\partial^2 u}{\partial x^2}$} & \texttt{secondDeriv} & \texttt{calculus.m}\\ 
+second derivative & \Large{$\frac{\partial^2 u}{\partial x^2}$} & \texttt{secondDeriv} & \texttt{diffusion.m}\\ 
 \hline 
 \end{tabular} 
 \end{center}
@@ -541,7 +541,7 @@ This section provides a function-by-function breakdown of the components that ma
 
 \subsection{\texttt{adv\_duudx}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[In file:] \hfill \\ \texttt{advection.m}
 \item[Called by:] \hfill \\ \texttt{advection}
 \item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$
 \item[Outputs:] \hfill \\ $duudx$: advection term $\frac{\partial uu}{\partial x}$
@@ -551,7 +551,7 @@ This function calculates one first derivative required for the advection term of
 
 \subsection{\texttt{adv\_duvdy}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[In file:] \hfill \\ \texttt{advection.m}
 \item[Called by:] \hfill \\ \texttt{advection}
 \item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\$h$: spatial step $\Delta x = \Delta y$
 \item[Outputs:] \hfill \\ $duvdy$: advection term $\frac{\partial uv}{\partial y}$
@@ -561,7 +561,7 @@ This function calculates one first derivative required for the advection term of
 
 \subsection{\texttt{adv\_dvudx}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[In file:] \hfill \\ \texttt{advection.m}
 \item[Called by:] \hfill \\ \texttt{advection}
 \item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\$h$: spatial step $\Delta x = \Delta y$
 \item[Outputs:] \hfill \\ $dvudx$: advection term $\frac{\partial vu}{\partial x}$
@@ -571,7 +571,7 @@ This function calculates one first derivative required for the advection term of
 
 \subsection{\texttt{adv\_dvvdy}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[In file:] \hfill \\ \texttt{advection.m}
 \item[Called by:] \hfill \\ \texttt{advection}
 \item[Inputs:] \hfill \\ $v$: $y$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$
 \item[Outputs:] \hfill \\ $dvvdy$: advection term $\frac{\partial vv}{\partial y}$
@@ -581,7 +581,7 @@ This function calculates one first derivative required for the advection term of
 
 \subsection{\texttt{advection}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{advance.m}
+\item[In file:] \hfill \\ \texttt{advection.m}
 \item[Called by:] \hfill \\ \texttt{BINS}
 \item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$ 
 \item[Outputs:] \hfill \\ $u\_advection$: $x$-direction advection term \\ $v\_advection$: $y$-direction advection term 
@@ -606,7 +606,7 @@ This is the main function.  It calls the functions needed to advance the solutio
 
 \subsection{\texttt{correct}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{advance.m}
+\item[In file:] \hfill \\ \texttt{correct.m}
 \item[Called by:] \hfill \\ \texttt{BINS}
 \item[Inputs:] \hfill \\ $uStar$: predicted $x$-direction velocity \\ $vStar$: predicted $y$-direction velocity \\ $newP$: pressure at next time step \\ $h$: spatial step $\Delta x = \Delta y$ \\ $dt$: time step
 \item[Outputs:] \hfill \\ $uNext$: $x$-direction velocity at next time step \\ $vNext$: $y$-direction velocity at next time step
@@ -619,7 +619,7 @@ This function corrects the next step velocity estimated in \texttt{predict} usin
 
 \subsection{\texttt{correct\_dpdx}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[In file:] \hfill \\ \texttt{correct.m}
 \item[Called by:] \hfill \\ \texttt{correct}
 \item[Inputs:] \hfill \\ $p$: pressure \\ $h$: spatial step $\Delta x = \Delta y$
 \item[Outputs:] \hfill \\ $dpdx$: $\frac{\partial p}{\partial x}$
@@ -631,7 +631,7 @@ needed in the correction step in function \texttt{correct}.
 
 \subsection{\texttt{correct\_dpdy}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[In file:] \hfill \\ \texttt{correct.m}
 \item[Called by:] \hfill \\ \texttt{correct}
 \item[Inputs:] \hfill \\ $p$: pressure \\ $h$: spatial step $\Delta x = \Delta y$
 \item[Outputs:] \hfill \\ $dpdy$: $\frac{\partial p}{\partial y}$
@@ -643,7 +643,7 @@ needed in the correction step in function \texttt{correct}.
 
 \subsection{\texttt{diffusion}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{advance.m}
+\item[In file:] \hfill \\ \texttt{diffusion.m}
 \item[Called by:] \hfill \\ \texttt{BINS}
 \item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$ \\ $nu$: molecular kinematic viscosity
 \item[Outputs:] \hfill \\ $u\_diffusion$: $x$-direction diffusion term \\ $v\_diffusion$: $y$-direction diffusion term 
@@ -654,7 +654,7 @@ This function calculates the diffusion term of the x- and y-momentum equations.
 \[ \text{diffusion term for y-momentum equation} = \nu \left(\frac{\partial^2 v}{\partial x^2} + \frac{\partial^2 v}{\partial y^2}\right) \]
 \subsection{\texttt{divergence}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[In file:] \hfill \\ \texttt{pressure.m}
 \item[Called by:] \hfill \\ \texttt{pressure}
 \item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$ 
 \item[Outputs:] \hfill \\ $divOut$: divergence of input velocity field $(u,v)$
@@ -737,7 +737,7 @@ and then solving
 
 \subsection{\texttt{predict}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{advance.m}
+\item[In file:] \hfill \\ \texttt{predict.m}
 \item[Called by:] \hfill \\ \texttt{BINS}
 \item[Inputs:] \hfill \\ $u$: $x$-direction velocity\\$v$: $y$-direction velocity\\ $u\_advection$: $x$-direction advection term \\ $v\_advection$: $y$-direction advection term \\$u\_diffusion$: $x$-direction diffusion term \\$v\_diffusion$: $y$-direction diffusion term \\$dt$: time step
 \item[Outputs:] \hfill \\ $uStar$: intermediate $x$-direction velocity \\ $vStar$: intermediate $y$-direction velocity
@@ -754,7 +754,7 @@ This uses only the advection and diffusion terms, so the pressure gradient is no
 
 \subsection{\texttt{pressure}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{advance.m}
+\item[In file:] \hfill \\ \texttt{pressure.m}
 \item[Called by:] \hfill \\ \texttt{BINS}
 \item[Inputs:] \hfill \\ $uStar$: intermediate $x$-direction velocity \\ $vStar$: intermediate $y$-direction velocity \\ $p$: pressures \\ $h$: spatial step $\Delta x = \Delta y$ \\ $dt$: time step \\ $ng$: number of ghost cells \\ $BC$: vector defining boundary conditions \\ $N$: number of cells in $x$ and $y$
 \item[Outputs:] \hfill \\ $newP$: pressure at next time step
@@ -764,7 +764,7 @@ This function solves for the pressure at the next time step.
 
 \subsection{\texttt{secondDeriv}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{calculus.m}
+\item[In file:] \hfill \\ \texttt{diffusion.m}
 \item[Called by:] \hfill \\ \texttt{diffusion}
 \item[Inputs:] \hfill \\ $u$: velocity (could be $x$- or $y$-direction) \\ $v$: $y$-direction velocity \\ $dir$: direction of derivative  \\ $h$: spatial step $\Delta x = \Delta y$ 
 \item[Outputs:] \hfill \\ $divOut$: second derivative of input velocity field
@@ -775,22 +775,16 @@ This function calculates the unmixed second derivatives of the velocity field fo
 %----------------------------------------------------------------------
 \section{BINS reference: by filename}
 %----------------------------------------------------------------------
-This section provudes a file-by-file breakdown of the components that make BINS work.
+This section provides a file-by-file breakdown of the components that make BINS work.
 
-\subsection{\texttt{advance.m}}
+\subsection{\texttt{advection.m}}
 \begin{description}
-\item[Functions:] \hfill \\ \texttt{advection} \\ \texttt{diffusion} \\ \texttt{predict} \\  \texttt{pressure} \\  \texttt{correct}
+\item[Functions:] \hfill \\ \texttt{advection} \\ \texttt{adv\_duudx} \\ \texttt{adv\_duvdy} \\  \texttt{adv\_dvudx} \\  \texttt{adv\_dvvdy}
 \end{description}
-This file contains the functions needed to advance the solution in time.
+This file contains the functions needed to calculate the advection term.
 
 \subsection{\texttt{BINS.m}}
 This file contains the function \texttt{BINS}, the main function of BINS.
-
-\subsection{\texttt{calculus.m}}
-\begin{description}
-\item[Functions:] \hfill \\ \texttt{adv\_duudx} \\ \texttt{adv\_duvdy} \\ \texttt{adv\_dvudx} \\  \texttt{adv\_dvvdy}  \\ \texttt{secondDeriv} \\ \texttt{divergence} \\ \texttt{correct\_dpdx} \\ \texttt{correct\_dpdy}
-\end{description}
-This file contains the functions needed to estimate spatial derivatives numerically.
 
 \subsection{\texttt{cavity.m}}
 This file contains a script that solves a driven lid cavity problem, which is intended to demonstrate the solid wall boundary conditions.
@@ -800,6 +794,18 @@ This file contains a script that compares the Taylor-Green vortex solution found
 
 \subsection{\texttt{convTest.m}}
 This file contains a script that performs a convergence test of \texttt{BINS}.  It calculates the error for each grid spacing by comparing the Taylor-Green vortex solution found in \texttt{BINS} to its analytical solution.
+
+\subsection{\texttt{correct.m}}
+\begin{description}
+\item[Functions:] \hfill \\ \texttt{correct} \\ \texttt{correct\_dpdx} \\ \texttt{correct\_dpdy} 
+\end{description}
+This file contains the functions needed to correct the next time step velocity using the updated pressure.
+
+\subsection{\texttt{diffusion.m}}
+\begin{description}
+\item[Functions:] \hfill \\ \texttt{diffusion} \\ \texttt{secondDeriv} 
+\end{description}
+This file contains the functions needed to calculate the diffusion term.
 
 \subsection{\texttt{fillBC.m}}
 This file contains the function \texttt{fillBC}, which fills the ghostcells of $u$, $v$, and $p$ to enforce boundary conditions.
@@ -821,6 +827,15 @@ This file contains the function \texttt{plotSoln}, which plots $u$ and $v$ at th
 
 \subsection{\texttt{poissonSolve.m}}
 This file contains the function \texttt{poissonSolve}, which solves the Poisson pressure equation.
+
+\subsection{\texttt{predict.m}}
+This file contains the function \texttt{predict}, which predicts the next time step velocity field based on the advection and diffusion terms.
+
+\subsection{\texttt{pressure.m}}
+\begin{description}
+\item[Functions:] \hfill \\ \texttt{pressure} \\ \texttt{divergence} 
+\end{description}
+This file contains the functions needed to calculate the Poisson equation, which is solved to find the pressure in \texttt{poissonSolve.m}.
 
 \subsection{\texttt{shear.m}}
 This file contains a script that solves a shear flow problem, which is intended to demonstrate the shear flow initial condition.

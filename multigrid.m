@@ -1,3 +1,8 @@
+% DANGER
+% VERY BUGGY
+% DO NOT USE
+
+
 % functions for solving Poisson pressure equation Ap = f
 % using multigrid with red-black ordered Gauss-Seidel
 % contains the functions

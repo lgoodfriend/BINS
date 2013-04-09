@@ -1,9 +1,7 @@
 % introduce BINS and its use
 % Taylor-Green vortex example
-
-% open access to functions defined in larger files
-advance
-calculus 
+close all
+clear all
 
 % choose parameters for this solution
 N = 32; % N = number of cells in x and y

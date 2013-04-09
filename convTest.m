@@ -2,9 +2,6 @@
 clear all
 close all
 
-advance
-calculus
-
 % choose solution parameters--------------------------------------------------------------------------
 Lin = 2*pi; % length of domain
 BC = [sqrt(-1) sqrt(-1) sqrt(-1) sqrt(-1)]; % boundary conditions
@@ -54,7 +51,7 @@ for Ne=[20 30 40 50 60 70 80 90 100]
                         deltaX(idx) = L/N;                     
                          
                         clear XX YY x y uexact vexact F u v p L N T
-endfor 
+end
 close all
 
 % calculate convergence rate and plot--------------------------------------------------------------------------------

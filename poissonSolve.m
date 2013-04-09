@@ -30,7 +30,7 @@ function solution = poissonSolve(rhs,h,BC,ng,N)
 	for i=1:N; for j=1:N
 		m(i,j) = i + (j-1)*N;
 		Mlookup( m(i,j), :) = [i,j];                    	          	
-	endfor; endfor
+	end; end
           	                          
 	% make the matrix A that defines the Poisson equation with the BCs
 	% and the matrix f that defines our right hand side          	                    	
@@ -44,9 +44,15 @@ function solution = poissonSolve(rhs,h,BC,ng,N)
 		idx = Mlookup(Midx,:);
 		i = idx(1); j=idx(2);
 		solution(i+ng,j+ng) = solnVector(Midx);
-	endfor
+	end
 
-endfunction
+end
+%--------------------------------------------------------------------------------------------------
+% functions called by poissonSolve:
+% make_matrix (in own file, make_matrix.m)
+% \ (Matlab function)
+%
+%--------------------------------------------------------------------------------------------------
 
 
 

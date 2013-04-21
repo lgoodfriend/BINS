@@ -21,14 +21,14 @@ function [uNext,vNext] = correct(uStar,vStar,newP,h,ng,N,dt)
 	uNext = uStar - dpdx*dt;
 	vNext = vStar - dpdy*dt;
 	% check that velocity is divergence-free
-	maxDiv = divCorr(uNext,vNext,h,ng,N);
+	checkDiv(uNext,vNext,h,ng,N);
 
 end
 %--------------------------------------------------------------------------------------------------
 % functions called by correct:
 % correct_dpdx
 % correct_dpdy
-% divCorr
+% checkDiv
 %
 % like the advection terms, the pressure derivatives are very similar 
 % but differ due to the staggered grid
@@ -70,9 +70,11 @@ function dpdy = correct_dpdy(p,h)
 	dpdy(:,2:end-1) = (p(:,2:end)-p(:,1:end-1))/h;
 end
 %--------------------------------------------------------------------------------------------------
-function maxDiv = divCorr(u,v,h,ng,N)
+function checkDiv(u,v,h,ng,N)
 	% calculates divergence of updated velocity field
-	% div should be zero
+	% maxDiv should be zero
+        % if maxDiv is not zero, displays plot of divergence to help debug and stops program
+        %
 	% for an overview of first derivatives, see Section 3.3.2 on page 7
 	% for details, see Section 4.1 on page 10
 	%
@@ -82,7 +84,7 @@ function maxDiv = divCorr(u,v,h,ng,N)
 	% h: spatial step
 	%
 	% returns:
-	% div: divergence of u and v, size [N+2*ng   N+2*ng]
+	% nothing
 	
 	% calculate divergence
 	dudx = (u(2:end,:)-u(1:end-1,:))/h;
@@ -92,7 +94,7 @@ function maxDiv = divCorr(u,v,h,ng,N)
 	% check for divergence = 0
 	maxDiv = max(max(abs(div(ng+1:ng+N,ng+1:ng+N))));
 	if maxDiv > 1e-8 % if the divergence is large
-		printf("Maximum divergence is %f \n",maxDiv)
+		disp(sprintf('Maximum divergence is %f \n',maxDiv))
 		
 		% plot divergence;
 		surf(div(ng+1:ng+N,ng+1:ng+N),'edgecolor','none')

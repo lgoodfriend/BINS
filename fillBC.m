@@ -43,11 +43,12 @@ function [uOut,vOut,pOut] = fillBC(u,v,p,ng,N,BC);
 			uOut(:,gcell) = u(:,N+gcell);
 			vOut(:,gcell) = v(:,N+gcell);
 			pOut(:,gcell) = p(:,N+gcell);
-			pOut(gcell,gcell) = pOut(gcell+N,gcell+N); % need correct diagonal gcell fill here... for some reason...
+			pOut(gcell,gcell) = pOut(gcell+N,gcell+N);
 		else % wall moving at speed BC parallel to itself
 			uOut(:,gcell) = 2*BC(3) - u(:,ng+1);
 			vOut(:,gcell) = 0; vOut(:,gcell+1) = 0;
 			pOut(:,gcell) = p(:,ng+1);
+                        pOut(gcell,gcell) = p(ng+1,ng+1);
 		end
 		% upper y BC-------------------------------------------------------------------------------------
 		if BC(4)==sqrt(-1) % periodic, filled with lower y inner data

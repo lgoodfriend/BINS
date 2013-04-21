@@ -36,16 +36,23 @@ function plotSoln(u,v,ng,L,N,h)
 	grid off
 	xlim([0 L]); ylim([0 L]);
 	
-	% streamlines----------------------------------------------------------------------------------
+	% speed and streamlines---------------------------------------------------------------------------
 	figure(3)
 	midU = 0.5*(u(1:end-1,:      ) + u(2:end,:    )); % velocities at cell centers
 	midV = 0.5*(v(:      ,1:end-1) + v(:    ,2:end));
 	xx = linspace(h/2,L-h/2,N); % grid
-        	yy = linspace(h/2,L-h/2,N);
-        	[y,x] = meshgrid(yy,xx);
-      	sx = linspace(h/2,L-h/2,N/2); % where streamlines start
-      	sy = linspace(h/2,L-h/2,N/2);
+        yy = linspace(h/2,L-h/2,N);
+        [y,x] = meshgrid(yy,xx);
+        % contours of speed
+        speed = sqrt(midU.^2 + midV.^2);
+        contourf(yy,xx,transpose(speed(ng+1:ng+N,ng+1:ng+N)),'LineStyle','none')
+        % streamlines
+      	sx = linspace(h/2,L-h/2,N/4); % where streamlines start
+      	sy = linspace(h/2,L-h/2,N/4);
       	[sxx,syy] = meshgrid(sx,sy);
-      	streamline(stream2(y,x,transpose(midU(ng+1:ng+N,ng+1:ng+N)),transpose(midV(ng+1:ng+N,ng+1:ng+N)),syy,sxx,[0.1,100]));
+        hold on
+      	h = streamline(stream2(y,x,transpose(midU(ng+1:ng+N,ng+1:ng+N)),transpose(midV(ng+1:ng+N,ng+1:ng+N)),syy,sxx,[0.1,100]));
+        set(h,'Color','white')
+        hold off
 	 
 end

@@ -1,4 +1,4 @@
-function [u_diffusion,v_diffusion] = diffusion(u,v,h,nu)
+function [u_diffusion,v_diffusion] = diffusionB(u,v,h,nu)
 % calculates the diffusion term of the Navier-Stokes equation
 % the diffusion term is discussed in Section 3.2, starting on page 5
 % this function calculates the second terms of the right hand size of equations 1 and 2 (page 5)

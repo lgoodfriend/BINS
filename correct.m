@@ -1,4 +1,4 @@
-function [uNext,vNext] = correct(uStar,vStar,newP,h,dt)
+function [uNext,vNext] = correct(uStar,vStar,newP,h,ng,N,dt)
 % correct the velocity with the new pressure field 
 % this forces the velocity field to be divergence free
 % the correction step is described in Section 3.2, starting on page 5
@@ -20,15 +20,18 @@ function [uNext,vNext] = correct(uStar,vStar,newP,h,dt)
 	% correct velocity to be divergence-free with new pressure derivatives
 	uNext = uStar - dpdx*dt;
 	vNext = vStar - dpdy*dt;
+	% check that velocity is divergence-free
+	maxDiv = divCorr(uNext,vNext,h,ng,N);
 
 end
 %--------------------------------------------------------------------------------------------------
 % functions called by correct:
 % correct_dpdx
 % correct_dpdy
+% divCorr
 %
-% both of the pressure derivative functions
-% like the advection terms, these are very similar but differ due to the staggered grid
+% like the advection terms, the pressure derivatives are very similar 
+% but differ due to the staggered grid
 % for an overview of the first derivatives, see Section 3.3.2 on page 7
 %--------------------------------------------------------------------------------------------------
 function dpdx = correct_dpdx(p,h)
@@ -66,3 +69,55 @@ function dpdy = correct_dpdy(p,h)
 	% take derivative
 	dpdy(:,2:end-1) = (p(:,2:end)-p(:,1:end-1))/h;
 end
+%--------------------------------------------------------------------------------------------------
+function maxDiv = divCorr(u,v,h,ng,N)
+	% calculates divergence of updated velocity field
+	% div should be zero
+	% for an overview of first derivatives, see Section 3.3.2 on page 7
+	% for details, see Section 4.1 on page 10
+	%
+	% inputs:
+	% u: x-direction velocity, size [N+2*ng+1   N+2*ng]
+	% v: y-direction velocity, size [N+2*ng   N+2*ng+1]
+	% h: spatial step
+	%
+	% returns:
+	% div: divergence of u and v, size [N+2*ng   N+2*ng]
+	
+	% calculate divergence
+	dudx = (u(2:end,:)-u(1:end-1,:))/h;
+	dvdy = (v(:,2:end)-v(:,1:end-1))/h;
+	div = dudx + dvdy;
+	
+	% check for divergence = 0
+	maxDiv = max(max(abs(div(ng+1:ng+N,ng+1:ng+N))));
+	if maxDiv > 1e-8 % if the divergence is large
+		printf("Maximum divergence is %f \n",maxDiv)
+		
+		% plot divergence;
+		surf(div(ng+1:ng+N,ng+1:ng+N),'edgecolor','none')
+		caxis([-1e-5 1e-5]); colorbar
+		title('divergence')
+		view(2)
+		grid off
+		xlabel('x'); ylabel('y');
+		xlim([1 N]);ylim([1 N]);
+		
+		% end program
+		error('Divergence too large')
+	end
+end
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

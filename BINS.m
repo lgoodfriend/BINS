@@ -35,7 +35,7 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 
 		% predict next step velocity with advection and diffusion terms (equations 1 and 2)
 		[u_advection, v_advection] = advection(u,v,h); % the advection term 
-		[u_diffusion, v_diffusion] = diffusion(u,v,h,nu); % the diffusion term
+		[u_diffusion, v_diffusion] = diffusionB(u,v,h,nu); % the diffusion term
 
 		[uStar,vStar] = predict(u,v,u_advection,v_advection,u_diffusion,v_diffusion,dt);  % estimate next time step velocity
 		[uStar,vStar,p] = fillBC(uStar,vStar,p,ng,N,BC); % enforce boundary conditions	
@@ -45,7 +45,7 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 		[uStar,vStar,newP] = fillBC(uStar,vStar,newP,ng,N,BC); % enforce boundary conditions
 		
 		% correct the velocity to be divergence-free using the updated pressure (equations 4 and 5)
-		[newU,newV] = correct(uStar,vStar,newP,h,dt);
+		[newU,newV] = correct(uStar,vStar,newP,h,ng,N,dt);
 		u=newU; v=newV;
 		p=newP;
 		[u,v,p] = fillBC(u,v,p,ng,N,BC);  % enforce boundary conditions

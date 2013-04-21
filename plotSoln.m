@@ -35,5 +35,17 @@ function plotSoln(u,v,ng,L,N,h)
 	view(2)	
 	grid off
 	xlim([0 L]); ylim([0 L]);
+	
+	% streamlines----------------------------------------------------------------------------------
+	figure(3)
+	midU = 0.5*(u(1:end-1,:      ) + u(2:end,:    )); % velocities at cell centers
+	midV = 0.5*(v(:      ,1:end-1) + v(:    ,2:end));
+	xx = linspace(h/2,L-h/2,N); % grid
+        	yy = linspace(h/2,L-h/2,N);
+        	[y,x] = meshgrid(yy,xx);
+      	sx = linspace(h/2,L-h/2,N/2); % where streamlines start
+      	sy = linspace(h/2,L-h/2,N/2);
+      	[sxx,syy] = meshgrid(sx,sy);
+      	streamline(stream2(y,x,transpose(midU(ng+1:ng+N,ng+1:ng+N)),transpose(midV(ng+1:ng+N,ng+1:ng+N)),syy,sxx,[0.1,100]));
 	 
 end

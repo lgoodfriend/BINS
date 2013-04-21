@@ -38,10 +38,10 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
 			else % BC is wall moving with speed = BC parallel to itself
-				A(Midx, m(2,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 	
+				A(Midx,Midx) = A(Midx,Midx)+1;
 			end	
 		% upper x boundary-------------------------------------------------------------------------------
 		elseif i==N &&  j>1 && j < N
@@ -52,9 +52,9 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(i,j+1) ) = 1; 
 			else % BC is wall moving with speed = BC parallel to itself
 				A(Midx, m(i-1,j) ) = 1; 
-				A(Midx, m(N-1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
+				A(Midx,Midx) = A(Midx,Midx)+1;
 			end
 		% lower y boundary-------------------------------------------------------------------------------
 		elseif i>1 && i < N && j==1 
@@ -66,8 +66,8 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 			else  % BC is wall moving with speed = BC parallel to itself
 				A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
-				A(Midx, m(i,2) ) = 1; 
 				A(Midx, m(i,j+1) ) = 1; 
+				A(Midx,Midx) = A(Midx,Midx)+1;
 			end
 		% upper y boundary-------------------------------------------------------------------------------
 		elseif i>1 && i < N &&  j==N 
@@ -80,62 +80,79 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 				A(Midx, m(i-1,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
 				A(Midx, m(i,j-1) ) = 1; 
-				A(Midx, m(i,N-1) ) = 1; 
+				A(Midx, Midx) = A(Midx,Midx)+1;
 			end
 		% lower left corner------------------------------------------------------------------------------
 		elseif i==1 && j==1 
-			if BC(1)==sqrt(-1) % periodic  BC
-				%A(Midx, m(N,j) ) = 1; 
-				%A(Midx, m(i+1,j) ) = 1; 
-				%A(Midx, m(i,N) ) = 1; 
-				%A(Midx, m(i,j+1) ) = 1; 
-				% pin down corner to allow matrix to solve
-				A(Midx,Midx) = 1;
-				f(Midx,1) = 1;
-			else % BC is wall moving with speed = BC parallel to itself
-				A(Midx, m(2,j) ) = 1; 
+			% x BCs
+			if BC(1)==sqrt(-1) % periodic  BC in x
+				A(Midx, m(N,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
-				A(Midx, m(i,2) ) = 1; 
-				A(Midx, m(i,j+1) ) = 1; 
+			else % x BC is wall moving with speed = BC parallel to itself
+				A(Midx, Midx ) = A(Midx,Midx)+1; 
+				A(Midx, m(i+1,j) ) = 1; 
+			end
+			% y BCs
+			if BC(3)==sqrt(-1) % periodic BC in y
+				A(Midx, m(i,N) ) = 1;
+				A(Midx, m(i,j+1) ) = 1;
+			else % y BC is wall moving with speed = BC parallel to itself
+				A(Midx, Midx) = A(Midx,Midx)+1;
+				A(Midx, m(i,j+1) ) = 1;
 			end
 		% upper left corner------------------------------------------------------------------------------
 		elseif i==1 && j==N 
-			if BC(1)==sqrt(-1) % periodic BC
+			% x BCs
+			if BC(1)==sqrt(-1) % periodic  BC in x
 				A(Midx, m(N,j) ) = 1; 
 				A(Midx, m(i+1,j) ) = 1; 
-				A(Midx, m(i,j-1) ) = 1; 
-				A(Midx, m(i,1) ) = 1; 
-			else % BC is wall moving with speed = BC parallel to itself
-				A(Midx, m(2,j) ) = 1; 
+			else % x BC is wall moving with speed = BC parallel to itself
+				A(Midx, Midx ) = A(Midx,Midx)+1; 
 				A(Midx, m(i+1,j) ) = 1; 
-				A(Midx, m(i,j-1) ) = 1; 
-				A(Midx, m(i,N-1) ) = 1; 
+			end
+			% y BCs
+			if BC(3)==sqrt(-1) % periodic BC in y
+				A(Midx, m(i,1) ) = 1;
+				A(Midx, m(i,j-1) ) = 1;
+			else % y BC is wall moving with speed = BC parallel to itself
+				A(Midx, Midx) = A(Midx,Midx)+1;
+				A(Midx, m(i,j-1) ) = 1;
 			end
 		% lower right corner-----------------------------------------------------------------------------
 		elseif i==N && j==1 
-			if BC(1)==sqrt(-1) % periodic BC
-				A(Midx, m(i-1,j) ) = 1; 
+			% x BCs
+			if BC(1)==sqrt(-1) % periodic  BC in x
 				A(Midx, m(1,j) ) = 1; 
-				A(Midx, m(i,N) ) = 1; 
-				A(Midx, m(i,j+1) ) = 1; 
-			else % BC is wall moving with speed = BC parallel to itself
 				A(Midx, m(i-1,j) ) = 1; 
-				A(Midx, m(N-1,j) ) = 1; 
-				A(Midx, m(i,2) ) = 1; 
-				A(Midx, m(i,j+1) ) = 1; 
+			else % x BC is wall moving with speed = BC parallel to itself
+				A(Midx, Midx ) = A(Midx,Midx)+1; 
+				A(Midx, m(i-1,j) ) = 1; 
+			end
+			% y BCs
+			if BC(3)==sqrt(-1) % periodic BC in y
+				A(Midx, m(i,N) ) = 1;
+				A(Midx, m(i,j+1) ) = 1;
+			else % y BC is wall moving with speed = BC parallel to itself
+				A(Midx, Midx) = A(Midx,Midx)+1;
+				A(Midx, m(i,j+1) ) = 1;
 			end
 		% upper right corner-----------------------------------------------------------------------------
 		elseif i==N && j==N 
-			if BC(1)==sqrt(-1) % periodic BC
-				A(Midx, m(i-1,j) ) = 1; 
+			% x BCs
+			if BC(1)==sqrt(-1) % periodic  BC in x
 				A(Midx, m(1,j) ) = 1; 
-				A(Midx, m(i,j-1) ) = 1; 
-				A(Midx, m(i,1) ) = 1; 
-			else % BC is wall moving with speed = BC parallel to itself
 				A(Midx, m(i-1,j) ) = 1; 
-				A(Midx, m(N-1,j) ) = 1; 
-				A(Midx, m(i,j-1) ) = 1; 
-				A(Midx, m(i,N-1) ) = 1; 
+			else % x BC is wall moving with speed = BC parallel to itself
+				A(Midx, Midx ) = A(Midx,Midx)+1; 
+				A(Midx, m(i-1,j) ) = 1; 
+			end
+			% y BCs
+			if BC(3)==sqrt(-1) % periodic BC in y
+				A(Midx, m(i,1) ) = 1;
+				A(Midx, m(i,j-1) ) = 1;
+			else % y BC is wall moving with speed = BC parallel to itself
+				A(Midx, Midx) = A(Midx,Midx)+1;
+				A(Midx, m(i,j-1) ) = 1;
 			end
 		end
 	end % loop over rows in matrix A

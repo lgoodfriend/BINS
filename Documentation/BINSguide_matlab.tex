@@ -134,7 +134,7 @@ since, using equation~\ref{poisson},
 &= 0 \\
 \end{align*}
 
-These steps appear in the files \texttt{advection.m}, \texttt{diffusion.m}, \texttt{predict.m}, \texttt{pressure.m}, and \texttt{correct.m}.  In the $\texttt{predict}$ function, the next time step velocity is estimated following equations~\ref{predictx} and~\ref{predicty}.  This step uses the advection and diffusion terms, calculated in subroutines \texttt{advection} and \texttt{diffusion} respectively.  The Poisson equation for pressure in equation~\ref{poisson} is solved in the function $\texttt{pressure}$.  The next time step velocity is then calculated by correcting the predicted velocity in function \texttt{correct}, as in equations~\ref{correctx} and~\ref{correcty}.  These steps are outlined below.
+These steps appear in the files \texttt{advection.m}, \texttt{diffusionB.m}\footnote{The name \texttt{diffusionB} was chosen to not conflict with Matlab's \texttt{diffusion} function.}, \texttt{predict.m}, \texttt{pressure.m}, and \texttt{correct.m}.  In the $\texttt{predict}$ function, the next time step velocity is estimated following equations~\ref{predictx} and~\ref{predicty}.  This step uses the advection and diffusion terms, calculated in subroutines \texttt{advection} and \texttt{diffusionB} respectively.  The Poisson equation for pressure in equation~\ref{poisson} is solved in the function $\texttt{pressure}$.  The next time step velocity is then calculated by correcting the predicted velocity in function \texttt{correct}, as in equations~\ref{correctx} and~\ref{correcty}.  These steps are outlined below.
 
 \renewcommand\arraystretch{2.5}
 \begin{center}
@@ -145,16 +145,18 @@ These steps appear in the files \texttt{advection.m}, \texttt{diffusion.m}, \tex
 advection term & \Large{$\frac{\partial u u}{\partial x} + \frac{\partial u v}{\partial y}$}  & \texttt{advection} & \texttt{advection.m}\\ 
  & \Large{$\frac{\partial v u}{\partial x} + \frac{\partial v v}{\partial y}$}  &  & \\ 
 \hline 
-diffusion term & \Large{$\nu\left( \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right)$} & \texttt{diffusion} & \texttt{diffusion.m} \\ 
+diffusion term & \Large{$\nu\left( \frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right)$} & \texttt{diffusionB} & \texttt{diffusionB.m} \\ 
  &  \Large{$\nu\left( \frac{\partial^2 v}{\partial x^2} + \frac{\partial^2 v}{\partial y^2}\right)$} &  &  \\
 \hline 
 next time step: & \Large{$ \frac{\partial u^*}{\partial t} =   -\frac{\partial u^n u^n}{\partial x} -\frac{\partial u^n v^n}{\partial y} + \nu\left( \frac{\partial^2 u^n}{\partial x^2} + \frac{\partial^2 u^n}{\partial y^2} \right)$} & \texttt{predict}& \texttt{predict.m} \\ 
  velocity prediction & \Large{$ \frac{\partial v^*}{\partial t} =   -\frac{\partial v^n u^n}{\partial x} -\frac{\partial v^n v^n}{\partial y} + \nu\left( \frac{\partial^2 v^n}{\partial x^2} + \frac{\partial^2 v^n}{\partial y^2} \right)$} &  &   \\ 
 \hline 
-next time step: pressure & \Large{$\nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x}+\frac{\partial v^*}{\partial y} \right)$} & \texttt{pressure} & \texttt{pressure.m}\\ 
+next time step: & \Large{$\nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x}+\frac{\partial v^*}{\partial y} \right)$} & \texttt{pressure} & \texttt{pressure.m}\\ 
+pressure & & &\\
 \hline 
-next time step: velocity & \Large{$u^{n+1}= u^* - \Delta t\frac{\partial p^{n+1}}{\partial x}$} & \texttt{correct}& \texttt{correct.m} \\ 
-  & \Large{$v^{n+1}= v^* - \Delta t\frac{\partial p^{n+1}}{\partial y}$} &  &   \\ 
+next time step: & \Large{$u^{n+1}= u^* - \Delta t\frac{\partial p^{n+1}}{\partial x}$} & \texttt{correct}& \texttt{correct.m} 
+  \\ 
+  velocity   & \Large{$v^{n+1}= v^* - \Delta t\frac{\partial p^{n+1}}{\partial y}$} & & \\
 \hline 
 \end{tabular} 
 \end{center}
@@ -223,7 +225,7 @@ first derivative: pressure correction & \Large{$\frac{\partial p}{\partial y}$} 
 \hline
 first derivative: divergence & \Large{$\frac{\partial u}{\partial x} + \frac{\partial v}{\partial y}$} & \texttt{divergence} & \texttt{pressure.m}\\ 
 \hline
-second derivative & \Large{$\frac{\partial^2 u}{\partial x^2}$} & \texttt{secondDeriv} & \texttt{diffusion.m}\\ 
+second derivative & \Large{$\frac{\partial^2 u}{\partial x^2}$} & \texttt{secondDeriv} & \texttt{diffusionB.m}\\ 
 \hline 
 \end{tabular} 
 \end{center}
@@ -477,14 +479,14 @@ u_{\mathrm{ghost}} = 2U_{\mathrm{wall}} - u_1
 Because we set the velocity perpendicular to the wall to be equal to zero on the wall, we do not need the pressure in the ghost cells.  That pressure would only have been used for correcting the velocity perpendicular to the wall, but the resulting value is overwritten by the boundary condition.
 
 %----------------------------------------------------------------------
-\section{Known limitations/bugs}
+\section{Known limitations}
 %----------------------------------------------------------------------
 \begin{itemize}
 \item Code assumes $\Delta x=\Delta y$
 \item Code assumes $T = k\Delta t$ for integer $k$
-\item Code requires $L_x = L_y$ and $N_x = N_y$
-\item Multigrid doesn't work correctly yet
-\item Only square domains can be used
+\item Code requires $L_x = L_y$ and $N_x = N_y$ (square domains, isotropic cells)
+\item Because code is 1st order, it is very dissipative.
+\item Multigrid doesn't work correctly (yet)
 \end{itemize}
 
 %----------------------------------------------------------------------
@@ -600,7 +602,7 @@ This function  estimates the advection term of the x- and y-momentum equations.
 \item[Called by:] \hfill \\ none
 \item[Inputs:] \hfill \\ $N$: number of cells in $x$ and $y$ \\ $L$: physical dimension in $x$ and $y$ \\ $dt$: time step \\ $T$: final time \\ $BC$: vector of boundary conditions \\ $IC\_choice$: flag choosing predefined IC \\ $nu$: molecular kinematic viscosity \\ $ng$: number of ghost cells
 \item[Outputs:] \hfill \\ none
-\item[Calls:] \hfill \\ \texttt{IC} \\ \texttt{fillBC} \\ \texttt{advection} \\ \texttt{diffusion} \\ \texttt{predict} \\ \texttt{pressure} \\ \texttt{correct} \\ \texttt{plotSoln}
+\item[Calls:] \hfill \\ \texttt{IC} \\ \texttt{fillBC} \\ \texttt{advection} \\ \texttt{diffusionB} \\ \texttt{predict} \\ \texttt{pressure} \\ \texttt{correct} \\ \texttt{plotSoln}
 \end{description}
 This is the main function.  It calls the functions needed to advance the solution in time, and plots the solution at the last timestep.
 
@@ -641,9 +643,9 @@ This function calculates the pressure derivative
 \[ \frac{\partial p}{\partial y}\]
 needed in the correction step in function \texttt{correct}.
 
-\subsection{\texttt{diffusion}}
+\subsection{\texttt{diffusionB}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{diffusion.m}
+\item[In file:] \hfill \\ \texttt{diffusionB.m}
 \item[Called by:] \hfill \\ \texttt{BINS}
 \item[Inputs:] \hfill \\ $u$: $x$-direction velocity \\ $v$: $y$-direction velocity \\ $h$: spatial step $\Delta x = \Delta y$ \\ $nu$: molecular kinematic viscosity
 \item[Outputs:] \hfill \\ $u\_diffusion$: $x$-direction diffusion term \\ $v\_diffusion$: $y$-direction diffusion term 
@@ -764,8 +766,8 @@ This function solves for the pressure at the next time step.
 
 \subsection{\texttt{secondDeriv}}
 \begin{description}
-\item[In file:] \hfill \\ \texttt{diffusion.m}
-\item[Called by:] \hfill \\ \texttt{diffusion}
+\item[In file:] \hfill \\ \texttt{diffusionB.m}
+\item[Called by:] \hfill \\ \texttt{diffusionB}
 \item[Inputs:] \hfill \\ $u$: velocity (could be $x$- or $y$-direction) \\ $v$: $y$-direction velocity \\ $dir$: direction of derivative  \\ $h$: spatial step $\Delta x = \Delta y$ 
 \item[Outputs:] \hfill \\ $divOut$: second derivative of input velocity field
 \item[Calls:] \hfill \\ none
@@ -801,9 +803,9 @@ This file contains a script that performs a convergence test of \texttt{BINS}.  
 \end{description}
 This file contains the functions needed to correct the next time step velocity using the updated pressure.
 
-\subsection{\texttt{diffusion.m}}
+\subsection{\texttt{diffusionB.m}}
 \begin{description}
-\item[Functions:] \hfill \\ \texttt{diffusion} \\ \texttt{secondDeriv} 
+\item[Functions:] \hfill \\ \texttt{diffusionB} \\ \texttt{secondDeriv} 
 \end{description}
 This file contains the functions needed to calculate the diffusion term.
 

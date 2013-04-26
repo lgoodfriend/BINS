@@ -1,4 +1,4 @@
-function newP = pressure(uStar,vStar,p,h,dt,ng,BC,N)
+function newP = pressure(uStar,vStar,p,h,dt,ng,BC,N,A)
 % solves for the pressure using the requirement that the velocity
 % field must be divergence free:
 % laplacian(p) =  divergence(uStar) / dt
@@ -22,7 +22,7 @@ function newP = pressure(uStar,vStar,p,h,dt,ng,BC,N)
 	div = divergence(uStar,vStar,h);
 	rhs = div/dt;
 	% solve Poisson equation for pressure
-	newP = poissonSolve(rhs,h,BC,ng,N);
+	newP = poissonSolve(rhs,h,BC,ng,N,A);
 	
 end
 %--------------------------------------------------------------------------------------------------

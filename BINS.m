@@ -28,6 +28,8 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 	h = L./(N-1); 
 	[u,v,p] = IC(L,N,ng,IC_choice);
 	[u,v,p] = fillBC(u,v,p,ng,N,BC);
+        % define Poisson operator for pressure solution
+	A = make_matrix(N,ng,h,BC);
 
 	t=0;
 	while t < T
@@ -41,7 +43,7 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 		[uStar,vStar,p] = fillBC(uStar,vStar,p,ng,N,BC); % enforce boundary conditions	
 
 		% project the velocity field onto a divergence-free field to get the pressure (equation 3)
-		newP = pressure(uStar,vStar,p,h,dt,ng,BC,N); % do the projection		
+		newP = pressure(uStar,vStar,p,h,dt,ng,BC,N,A); % do the projection		
 		[uStar,vStar,newP] = fillBC(uStar,vStar,newP,ng,N,BC); % enforce boundary conditions
 		
 		% correct the velocity to be divergence-free using the updated pressure (equations 4 and 5)

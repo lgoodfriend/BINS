@@ -1,4 +1,4 @@
-function solution = poissonSolve(rhs,h,BC,ng,N)
+function solution = poissonSolve(rhs,h,BC,ng,N,A)
 	% solve the Poisson equation:   d^2 solution / dx^2 + d^2 solution/dy^2 = rhs
 	% Numerically, this equation results in a matrix inversion:
 	% A_ij solution_j = rhs_i
@@ -19,27 +19,28 @@ function solution = poissonSolve(rhs,h,BC,ng,N)
 	% solution: the solution to the Poisson equation, the new pressure, size [N+2*ng   N+2*ng]
 	solution = rhs;
 	
-	% solve using multigrid (not done yet!)
-	%solution(ng+1:ng+N,ng+1:ng+N) = multigrid_solve(ng+1:ng+N,ng+1:ng+N),h,N,BC);
-	%return
-	
-	% solve using built in matrix inverter
-	% make a lookup table for converting between matrix and vector representations
-	% of the xy plane
+	% make the vector f that defines our right hand side	
+	%
+	% equivalent to
+        % f = (h^2)*reshape(rhs(ng+1:ng+N,ng+1:ng+N),N^2,1);   
 	bigM = N^2;
 	for i=1:N; for j=1:N
 		m(i,j) = i + (j-1)*N;
-		Mlookup( m(i,j), :) = [i,j];                    	          	
+		Mlookup( m(i,j), :) = [i,j];	
 	end; end
-          	                          
-	% make the matrix A that defines the Poisson equation with the BCs
-	% and the matrix f that defines our right hand side          	                    	
-	[A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC);
+	for Midx = 1:bigM
+		idx = Mlookup(Midx,:);
+		i = idx(1); j = idx(2);
+		f( Midx,1 ) = (h^2) * rhs(i+ng,j+ng); 
+        end
                                 	           
 	% solve solnVector = A\f using matlab's built-ins
 	solnVector = A\f;
                                 	           
 	% convert back to x,y,z coordinates
+	%
+	% equivalent to
+        % solution(ng+1:ng+N,ng+1:ng+N) = reshape(solnVector,N,N);
 	for Midx = 1:bigM
 		idx = Mlookup(Midx,:);
 		i = idx(1); j=idx(2);

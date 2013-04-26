@@ -1,4 +1,4 @@
-function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
+function A = make_matrix(N,ng,h,BC)
 	% form the matrix inversion problem that solves for the pressure
 	% Ap = f
 	% for details, see Section 3.4 on page 8
@@ -16,6 +16,14 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 	% returns:
 	% A: matrix defining Poisson operator and boundary conditions, size [bigM   bigM]
 	% f: vector defining right hand side, size [bigM]
+
+	% make a lookup table for converting between matrix and vector representations
+	% of the xy plane
+	bigM = N^2;
+	for i=1:N; for j=1:N
+		m(i,j) = i + (j-1)*N;
+		Mlookup( m(i,j), :) = [i,j];                    	          	
+	end; end
 	
 	A = sparse(bigM,bigM);
 	f = sparse(bigM,1);
@@ -23,7 +31,6 @@ function [A,f] = make_matrix(bigM,N,ng,h,Mlookup,m,rhs,BC)
 		A(Midx,Midx) = -4;
 		idx = Mlookup(Midx,:);
 		i = idx(1); j = idx(2);
-		f( Midx,1 ) = (h^2) * rhs(i+ng,j+ng); 
 		% interior point---------------------------------------------------------------------------------
 		if i>1 && i < N &&  j>1 && j < N 
 			A(Midx, m(i-1,j) ) = 1; 

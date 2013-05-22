@@ -27,19 +27,23 @@ The Berkeley Incompressible Navier-Stokes (BINS) solver is designed to be an edu
 \section{Getting started}
 %----------------------------------------------------------------------
 
-BINS is written in Matlab/Octave, so you will need one of those interpreters to run the code.  Octave is a free, open-source language that is very similar to Matlab.  You can learn about it at \[ \texttt{www.gnu.org/software/octave} \]
+BINS is written in Matlab, so you will need a copy of Matlab to run the code.
 
 The first step is to download the code tarball from \[ \texttt{https://github.com/lgoodfriend/BINS/downloads}\]  After you've downloaded and untarred the tarball, you should see a folder with a bunch of files in it.  The key file for getting started is \texttt{intro.m}.
 
-Start a Matlab/Octave session and type \texttt{intro} at the prompt.  You should see two figures appear (Figure~\ref{vel_init}).  These represent the solution to the Taylor-Green vortex after 1 second.  You can change some aspects of how the code runs by changing the inputs to the function \texttt{BINS} in the file \texttt{intro.m}.
+Start a Matlab session and type \texttt{intro} at the prompt.  You should see four figures appear (Figure~\ref{vel_init}).  These represent the solution to the Taylor-Green vortex after 1 second.  You can change some aspects of how the code runs by changing the inputs to the function \texttt{BINS} in the file \texttt{intro.m}.
 
 \begin{center}
 \begin{figure*}
 \center
-\subfloat[u velocity]{\label{u_init}\includegraphics[width=0.48\textwidth]{u_init.png} 
+\subfloat[u velocity]{\label{u_init}\includegraphics[width=0.48\textwidth]{intro_u.png} 
 }  
-\subfloat[v velocity]{\label{v_init}\includegraphics[width=0.48\textwidth]{v_init.png} 
-} 
+\subfloat[v velocity]{\label{v_init}\includegraphics[width=0.48\textwidth]{intro_v.png} 
+} \\
+\subfloat[speed and streamlines]{\label{u_init}\includegraphics[width=0.48\textwidth]{intro_streamline.png} 
+}  
+\subfloat[vorticity]{\label{v_init}\includegraphics[width=0.48\textwidth]{intro_vorticity.png} 
+} \\
 \caption{Results of running \texttt{intro.m}}
 \label{vel_init}
 \end{figure*}
@@ -80,6 +84,15 @@ The initial condition is controlled by \texttt{IC\_choice}, which indexes to an 
 \[ p = 0\]
 \end{enumerate}
 You can add a new initial condition by editing \texttt{IC.m} to include the initial condition you would like.  If you are setting a new initial condition, it is important to understand how the staggered grid is set up (see section~\ref{staggeredGrid}).
+
+\subsection{Pre-defined test cases}
+BINS includes several test cases already set up:
+\begin{enumerate}
+\item \texttt{cavity.m}: driven lid cavity flow
+\item \texttt{couette.m}: Couette flow
+\item \texttt{intro.m}: Taylor-Green vortex
+\item \texttt{shear.m}: interesting shear flow
+\end{enumerate}
 
 %----------------------------------------------------------------------
 \section{Underlying mathematics}
@@ -308,7 +321,7 @@ solution to Poisson equation & $p = A^{-1}f$ & \texttt{solvePoisson} & \texttt{s
 \subsubsection{Inverting a matrix}
 Solving the Poisson equation requires inverting a matrix.  Gaussian elimination can invert a matrix, but this algorithm is expensive, in that it takes a lot of computational time.  Many shortcuts have been developed to invert matrices quickly.  These shortcuts often do not solve the inversion exactly, which is ok, because we are only approximating the solution to the Navier-Stokes equations anyway.
 
-This version of BINS uses Matlab/Octave's built in matrix inversion function \texttt{backslash}, also written ``\textbackslash''.  This is admittedly a crutch, but it's a very nice crutch.  Both Matlab and Octave have sparse matrix functions built in, which makes inverting sparse matrices like $A$ very fast.  Solving the Poisson equation is usually the slowest part of a Navier-Stokes solver.
+This version of BINS uses Matlab's built in matrix inversion function \texttt{backslash}, also written ``\textbackslash''.  This is admittedly a crutch, but it's a very nice crutch.  Matlab has sparse matrix functions built in, which makes inverting sparse matrices like $A$ very fast.  Solving the Poisson equation is the slowest part of BINS and many other Navier-Stokes solvers.
 
 %----------------------------------------------------------------------
 \section{Specifics of the computation}
@@ -346,7 +359,6 @@ Similarly, to calculate $\frac{\partial uv}{\partial y}$, we average $u$ and $v$
 A similar averaging procedure is used for the $y$-direction advection terms (Figure~\ref{y_adv}).  Note that all of these derivatives are centered between the plus and minus velocities, making the derivatives second order.
 
 
-\FloatBarrier
 \begin{center}
 \begin{figure*}[h]
 \center
@@ -371,7 +383,6 @@ A similar averaging procedure is used for the $y$-direction advection terms (Fig
 \end{figure*}
 \end{center}
 
-\FloatBarrier
 The derivatives needed for the divergence-free / pressure solve are relatively simple.  The divergence is needed at cell centers, which is naturally second-order with face-centered velocities (Figure~\ref{div}). We can compute
 
 \[ \text{divergence}_{i,j} = \frac{1}{\Delta x}\left( u_{i+1,j}-u_{i,j}\right) + \frac{1}{\Delta y}\left( v_{i,j+1}-v_{i,j}\right) \]
@@ -380,7 +391,6 @@ Similarly, the pressure derivatives needed at cell faces are naturally second-or
 \[ \left.\frac{\partial p}{\partial x}\right|_{i,j} = \frac{1}{\Delta x}\left( p_{i,j} - p_{i-1,j}\right)\]
 \[ \left.\frac{\partial p}{\partial y}\right|_{i,j} = \frac{1}{\Delta y}\left( p_{i,j} - p_{i,j-1}\right)\]
 
-\FloatBarrier
 \begin{center}
 \begin{figure*}
 \center
@@ -485,8 +495,8 @@ Because we set the velocity perpendicular to the wall to be equal to zero on the
 \item Code assumes $\Delta x=\Delta y$
 \item Code assumes $T = k\Delta t$ for integer $k$
 \item Code requires $L_x = L_y$ and $N_x = N_y$ (square domains, isotropic cells)
-\item Because code is 1st order, it is very dissipative.
-\item Multigrid doesn't work correctly (yet)
+\item Because code is 1st order, it is dissipative.
+\item Code is slow, partially due to reliance on Matlab's ``\textbackslash''.
 \end{itemize}
 
 %----------------------------------------------------------------------
@@ -499,16 +509,13 @@ The exact solution on a periodic domain of dimension $[0,2\pi] \times [0,2\pi]$ 
 \[ F(t)=e^{-2\nu t}\]
 
 \subsection{Comparison with exact solution}
-For a first check, we can look at the difference between the numerical and exact solution using \texttt{compTest.m} (Figure~\ref{error}).  These plots show that most of the error is small, about 1\% of the maximum function value (which is $e^{2\nu T}=0.8$).
+For a first check, we can look at the difference between the numerical and exact solution using \texttt{compTest.m} (Figure~\ref{error}).  There is little error between the exact and numerical solutions.
 
 \begin{center}
 \begin{figure*}
 \center
-\subfloat[$u$ error]{\label{uerr}\includegraphics[width=0.45\textwidth]{u_error.png} 
-}  
-\subfloat[$v$ error]{\label{verr}\includegraphics[width=0.45\textwidth]{v_error.png} 
-} 
-\caption{Absolute error at $t=1$ on a grid of size $N=70$.}
+\includegraphics[width=0.6\textwidth]{compTest.png} 
+\caption{Numerical and exact solution at $t=2$ on a grid of size $N=64$.  Solutions are at $y=\pi/2$, varying in $x$.}
 \label{error}
 \end{figure*}
 \end{center}
@@ -518,12 +525,12 @@ A common test is to observe how the solution accuracy increases with decreasing 
 
 Difference schemes have different convergence rates, which can be calculated theoretically.  For example, the forward Euler timestepping used in BINS is first-order, while the spatial differences are second order\footnote{The first derivatives are second order accurate because of the staggered grid.}.  But what is the order of accuracy of BINS?
 
-We can measure the order of accuracy of our real code using a convergence test in \texttt{convTest.m}.  We solve the same test problem, the Taylor-Green vortex, up to time $t=0.1$ for a range of spatial and time steps.  We calculate the error of our solution, using the known exact solution.  We can now plot the error as a function of the grid spacing/time step (Figure~\ref{conv}).  The order of accuracy of our code is the slope of the best fit line through this plot.  This plot shows the order to be 1.11, which is close to the order 1 predicted by using forward Euler time stepping.
+We can measure the order of accuracy of our real code using a convergence test in \texttt{convTest.m}.  We solve the same test problem, the Taylor-Green vortex, up to time $t=2$ for a range of spatial and time steps.  We calculate the error of our solution, using the known exact solution.  We can now plot the error as a function of the grid spacing/time step (Figure~\ref{conv}).  The order of accuracy of our code is the slope of the best fit line through this plot.  This plot shows the order to be 1.02, which is close to the order 1 predicted by using forward Euler time stepping.
 
 \begin{figure}
 \center
-\includegraphics[width=.7\textwidth]{conv.png} 
-\caption{Convergence test for BINS, order = 1.11.}
+\includegraphics[width=.7\textwidth]{convTest.png} 
+\caption{Convergence test for BINS, order = 1.02.}
 \label{conv}
 \end{figure}
 
@@ -602,7 +609,7 @@ This function  estimates the advection term of the x- and y-momentum equations.
 \item[Called by:] \hfill \\ none
 \item[Inputs:] \hfill \\ $N$: number of cells in $x$ and $y$ \\ $L$: physical dimension in $x$ and $y$ \\ $dt$: time step \\ $T$: final time \\ $BC$: vector of boundary conditions \\ $IC\_choice$: flag choosing predefined IC \\ $nu$: molecular kinematic viscosity \\ $ng$: number of ghost cells
 \item[Outputs:] \hfill \\ none
-\item[Calls:] \hfill \\ \texttt{IC} \\ \texttt{fillBC} \\ \texttt{advection} \\ \texttt{diffusionB} \\ \texttt{predict} \\ \texttt{pressure} \\ \texttt{correct} \\ \texttt{plotSoln}
+\item[Calls:] \hfill \\ \texttt{IC} \\ \texttt{make\_matrix} \\ \texttt{fillBC} \\ \texttt{advection} \\ \texttt{diffusionB} \\ \texttt{predict} \\ \texttt{pressure} \\ \texttt{correct} \\ \texttt{plotSoln}
 \end{description}
 This is the main function.  It calls the functions needed to advance the solution in time, and plots the solution at the last timestep.
 
@@ -701,7 +708,7 @@ This function is in the file \texttt{IC.m}.  It initializes the $u$, $v$, and $p
 \subsection{\texttt{make\_matrix}}
 \begin{description}
 \item[In file:] \hfill \\ \texttt{make\_matrix.m}
-\item[Called by:] \hfill \\ \texttt{poissonSolve}
+\item[Called by:] \hfill \\ \texttt{BINS}
 \item[Inputs:] \hfill \\ $bigM$: size of matrix $= N^2$ \\ $N$: number of grid points in $x$ and $y$ \\ $ng$: number of ghost cells \\ $h$: grid spacing $\Delta x = \Delta y$ \\ $Mlookup$: table for finding $(i,j)$ coordinate of point in matrix $A$ or vector $f$ \\ $m$: table for finding location of point in matrix $A$ or vector $f$ from $(i,j)$ coordinate \\ $rhs$: right hand side of Poisson equation \\ $BC$: vector of boundary conditions
 \item[Outputs:] \hfill \\ $A$: matrix of Poisson equation \\ $f$: vector of Poisson equation
 \item[Calls:] \hfill \\ none
@@ -726,9 +733,9 @@ This function plots the velocities $u$ and $v$ at end time $T$.
 \begin{description}
 \item[In file:] \hfill \\ \texttt{poissonSolve.m}
 \item[Called by:] \hfill \\ \texttt{pressure}
-\item[Inputs:] \hfill \\  $rhs$: right hand side to Poisson equation \\ $h$: spatial step $\Delta x = \Delta y$ \\ $BC$: vector defining boundary conditions \\ $ng$: number of ghost cells \\ $N$: number of cells in $x$ and $y$
+\item[Inputs:] \hfill \\  $rhs$: right hand side to Poisson equation \\ $h$: spatial step $\Delta x = \Delta y$ \\ $BC$: vector defining boundary conditions \\ $ng$: number of ghost cells \\ $N$: number of cells in $x$ and $y$ \\ $A$: matrix defining Poisson operator
 \item[Outputs:] \hfill \\ $solution$: solution to Poisson equation
-\item[Calls:] \hfill \\ \texttt{make\_matrix} \\ \texttt{Matlab \textbackslash}
+\item[Calls:] \hfill \\ \texttt{Matlab \textbackslash}
 \end{description}
 This function solves the Poisson equation
 \[ \nabla^2 p^{n+1} = \frac{1}{\Delta t}\left( \frac{\partial u^*}{\partial x} + \frac{\partial v^*}{\partial y} \right) \]
@@ -758,7 +765,7 @@ This uses only the advection and diffusion terms, so the pressure gradient is no
 \begin{description}
 \item[In file:] \hfill \\ \texttt{pressure.m}
 \item[Called by:] \hfill \\ \texttt{BINS}
-\item[Inputs:] \hfill \\ $uStar$: intermediate $x$-direction velocity \\ $vStar$: intermediate $y$-direction velocity \\ $p$: pressures \\ $h$: spatial step $\Delta x = \Delta y$ \\ $dt$: time step \\ $ng$: number of ghost cells \\ $BC$: vector defining boundary conditions \\ $N$: number of cells in $x$ and $y$
+\item[Inputs:] \hfill \\ $uStar$: intermediate $x$-direction velocity \\ $vStar$: intermediate $y$-direction velocity \\ $p$: pressures \\ $h$: spatial step $\Delta x = \Delta y$ \\ $dt$: time step \\ $ng$: number of ghost cells \\ $BC$: vector defining boundary conditions \\ $N$: number of cells in $x$ and $y$ \\ $A$: matrix defining Poisson operator
 \item[Outputs:] \hfill \\ $newP$: pressure at next time step
 \item[Calls:] \hfill \\ \texttt{divergence} \\ \texttt{poissonSolve}
 \end{description}
@@ -803,6 +810,9 @@ This file contains a script that performs a convergence test of \texttt{BINS}.  
 \end{description}
 This file contains the functions needed to correct the next time step velocity using the updated pressure.
 
+\subsection{\texttt{couette.m}}
+This file contains a script that solves a Couette flow problem, which is intended to demonstrate the solid wall boundary conditions.
+
 \subsection{\texttt{diffusionB.m}}
 \begin{description}
 \item[Functions:] \hfill \\ \texttt{diffusionB} \\ \texttt{secondDeriv} 
@@ -842,7 +852,9 @@ This file contains the functions needed to calculate the Poisson equation, which
 \subsection{\texttt{shear.m}}
 This file contains a script that solves a shear flow problem, which is intended to demonstrate the shear flow initial condition.
 
+\section{Acknowledgements}
 
+Many thanks to Tina Chow and her spring 2013 CE200B class--the first class to test this project--for their good humor and help fixing bugs.  Percy Link, Diane Taylor, David Wiersema, Bowen Zhou, and Jason Simon all gave great suggestions for improvements.  Thanks to Ian Tse for enthusiasm, and to Joe Grimm for help with the pictures.  Special thanks to Dr. Phillip Colella for the fun shear flow case.
 
 \end{document}
 

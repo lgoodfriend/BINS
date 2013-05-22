@@ -8,11 +8,11 @@ BC = [sqrt(-1) sqrt(-1) sqrt(-1) sqrt(-1)]; % boundary conditions
 nu = 0.1; % molecular viscosity
 IC_choice = 3;   % initial condition: Taylor-Green vortex
 ng = 1; % number of ghost cells on each side of each dimension
-Tin = 0.1; % end time
+Tin = 2; % end time
 
 idx=0;
 % loop over a range of grid sizes-----------------------------------------------------------------------
-for Ne=[20 30 40 50 60 70 80 90 100] 
+for Ne=[40 50 60 70 80 90 100 110 120] 
 	idx=idx+1;
 	% numerical solution
 	Ne
@@ -60,12 +60,15 @@ order_of_convergence = p(1)
 fit = exp(p(2))*deltaX.^p(1);
 
 % plot!
+loglog(deltaX,error,'o','MarkerSize',10)
 hold on
-loglog(deltaX,error,'o','MarkerSize',24)
 loglog(deltaX,fit,'-','LineWidth',2)
 hold off
 xlabel('\Delta x')
 ylabel('Error')
+grid on
+xlim([5/120 7/40])
+ylim([.003 .02])
 
 save( ['./conv_data.mat'], ...
 	'deltaX','error','fit');

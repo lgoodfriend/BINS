@@ -14,6 +14,7 @@ function [uNext,vNext] = correct(uStar,vStar,newP,h,ng,N,dt)
 % returns:
 % uNext = x-direction velocity at next time step, size [N+2*ng+1   N+2*ng]
 % vNext = y-direction velocity at next time step, size [N+2*ng   N+2*ng+1]
+
 	% calculate new pressure derivatives
 	dpdx = correct_dpdx(newP,h);
 	dpdy = correct_dpdy(newP,h);

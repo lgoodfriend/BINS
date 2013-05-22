@@ -4,16 +4,13 @@ function solution = poissonSolve(rhs,h,BC,ng,N,A)
 	% A_ij solution_j = rhs_i
 	% for more details, see Section 3.4 on page 8
 	%
-	% two solution methods are implemented here: 
-	%	matlab's built-in matrix inverter
-	%	multigrid with a red-black Gauss Seidel core (not done yet!)
-	%
 	% inputs:
 	% rhs: right hand side to Poisson equation, size [N+2*ng   N+2*ng]
 	% h: grid size
 	% BC: array defining boundary conditions, size [4]
 	% ng: number of guardcells
 	% N: number of points in the grid
+	% A: matrix defining Poisson operator
 	%
 	% returns:
 	% solution: the solution to the Poisson equation, the new pressure, size [N+2*ng   N+2*ng]
@@ -54,10 +51,3 @@ end
 % \ (Matlab function)
 %
 %--------------------------------------------------------------------------------------------------
-
-
-
-
-
-
-

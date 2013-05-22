@@ -1,4 +1,4 @@
-% test BINS order of convergence using Taylor Green as the exact solution
+% test BINS order of convergence using Taylor-Green as the exact solution
 clear all
 close all
 
@@ -6,7 +6,7 @@ close all
 Lin = 2*pi; % length of domain
 BC = [sqrt(-1) sqrt(-1) sqrt(-1) sqrt(-1)]; % boundary conditions
 nu = 0.1; % molecular viscosity
-IC_choice = 3;   % initial condition
+IC_choice = 3;   % initial condition: Taylor-Green vortex
 ng = 1; % number of ghost cells on each side of each dimension
 Tin = 0.1; % end time
 
@@ -43,18 +43,17 @@ for Ne=[20 30 40 50 60 70 80 90 100]
 	F = exp(-2*nu*T)
 	uexact = uexact*F; vexact = vexact*F;
 	
-	plotSoln(u,v,ng,L,N,h)
 	% compare numerical to exact solution
 	uerr =  max(max(   abs(uexact(2:end-1,2:end-1)-u(2:end-1,2:end-1))    ));
 	verr =  max(max(   abs(vexact(2:end-1,2:end-1)-v(2:end-1,2:end-1))    ));
-                        error(idx) = max(  [uerr verr]  );
-                        deltaX(idx) = L/N;                     
+	error(idx) = max(  [uerr verr]  );
+	deltaX(idx) = L/N;                     
                          
-                        clear XX YY x y uexact vexact F u v p L N T
+	clear XX YY x y uexact vexact F u v p L N T
 end
 close all
 
-% calculate convergence rate and plot--------------------------------------------------------------------------------
+% calculate convergence rate and plot---------------------------------------------------------------
 % estimate slope using linear fit
 p = polyfit(log(deltaX),log(error),1);
 order_of_convergence = p(1)
@@ -69,4 +68,4 @@ xlabel('\Delta x')
 ylabel('Error')
 
 save( ['./conv_data.mat'], ...
-	            'deltaX','error','fit');
+	'deltaX','error','fit');

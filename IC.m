@@ -59,7 +59,7 @@ function [u,v,p] = IC(L,N,ng,IC_choice)
 		[y,x] = meshgrid(yy,xx);
 		p(li:ui,li:ui) = 0.25*(cos(2*x) + cos(2*y));
 		
-		case{4} % shear flow
+		case{4} % shear flow, thanks to Dr. Colella at LBNL
 		% u
 		xx = linspace(0,L,N+1);
 		yy = linspace(h/2,L-h/2,N);

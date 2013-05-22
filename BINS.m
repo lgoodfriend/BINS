@@ -2,9 +2,8 @@
 % an educational tool
 %
 % written in Matlab, the prototyping language of engineers
-% (actually written in Octave, the open source prototyping language of engineers) 
 %
-% Lauren Goodfriend, 2012
+% Lauren Goodfriend, 2013
 
 function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 % solves the 2D incompressible Navier-Stokes equations

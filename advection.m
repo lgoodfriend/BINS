@@ -30,8 +30,7 @@ end
 % adv_dvudx
 % adv_dvvdy
 %
-% all of the advection term functions
-% these are very similar, but all differ slightly due to the staggered grid
+% these are very similar, but differ slightly due to the staggered grid
 % for an overview of the advection term derivatives, see Section 3.3.2 on page 7
 %--------------------------------------------------------------------------------------------------
 function duudx = adv_duudx(u,h)

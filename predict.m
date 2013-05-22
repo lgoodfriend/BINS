@@ -16,6 +16,7 @@ function [uStar,vStar] = predict(u,v,u_advection,v_advection,u_diffusion,v_diffu
 % returns:
 % uStar = x-direction predicted velocity at next time step, size [N+2*ng+1   N+2*ng]
 % vStar = y-direction predicted velocity at next time step, size [N+2*ng   N+2*ng+1]
+
 	uStar = u + (-u_advection + u_diffusion)*dt;
 	vStar = v + (-v_advection + v_diffusion)*dt;
 end

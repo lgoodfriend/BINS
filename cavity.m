@@ -9,7 +9,7 @@ L = 1; % L = physical dimension in x and y
 dt = (L/N) / 10; % dt = timestep
 T = 10; % T = final time
 BC = [0 0 0 1]; % BC = boundary conditions
-IC_choice = 1; % IC_choice = choice of initial conditions defined in IC.m
+IC_choice = 1; % IC_choice = choice of initial conditions defined in IC.m: u=v=0
 nu = 0.001; % nu = molecular viscosity
 ng = 1; % ng = number of ghostcells 
 

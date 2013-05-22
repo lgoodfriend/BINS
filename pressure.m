@@ -1,7 +1,7 @@
 function newP = pressure(uStar,vStar,p,h,dt,ng,BC,N,A)
 % solves for the pressure using the requirement that the velocity
 % field must be divergence free:
-% laplacian(p) =  divergence(uStar) / dt
+% Laplacian(p) =  divergence(uStar) / dt
 % the Poisson pressure solve is discussed in Section 3.2, starting on page 5
 % this function solves equation 3 for p^n+1 (page 5)
 %
@@ -14,6 +14,7 @@ function newP = pressure(uStar,vStar,p,h,dt,ng,BC,N,A)
 % ng = number of guardcells
 % BC = boundary conditions, size [4]
 % N = number of cells in each direction
+% A = matrix defining Poisson operator
 %
 % returns:
 % newP = pressure at next time step

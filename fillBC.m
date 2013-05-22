@@ -1,6 +1,6 @@
 function [uOut,vOut,pOut] = fillBC(u,v,p,ng,N,BC);
 	% fills the ghost cells of u, v, and p to enforce boundary conditions
-	% boundary conditions are discussed in section 4.2 on page 13
+	% boundary conditions are discussed in section 4.2 on page 14
 	% 
 	% inputs:
 	% u: x-direction velocity, size [N+2*ng+1   N+2*ng]

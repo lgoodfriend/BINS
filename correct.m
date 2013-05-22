@@ -2,7 +2,7 @@ function [uNext,vNext] = correct(uStar,vStar,newP,h,ng,N,dt)
 % correct the velocity with the new pressure field 
 % this forces the velocity field to be divergence free
 % the correction step is described in Section 3.2, starting on page 5
-% this function solves equations 4 and 5 (page 5)
+% this function solves equations 4 and 5 (page 6)
 %
 % inputs:
 % uStar = predicted x-direction velocity at next time step, size [N+2*ng+1   N+2*ng]

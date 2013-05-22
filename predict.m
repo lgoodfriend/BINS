@@ -1,7 +1,7 @@
 function [uStar,vStar] = predict(u,v,u_advection,v_advection,u_diffusion,v_diffusion,dt)
 % estimates the velocity at the next time step
 % the prediction step is discussed in Section 3.2, starting on page 5
-% the time stepping method used here (forward Euler) is discussed in Section 3.3.1 on page 6
+% the time stepping method used here (forward Euler) is discussed in Section 3.3.1 on page 7
 % this function solves equations 1 and 2 for u* (page 5)
 %
 % inputs:

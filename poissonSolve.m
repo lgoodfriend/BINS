@@ -1,4 +1,4 @@
-function solution = poissonSolve(rhs,h,BC,ng,N,A)
+function solution = poissonSolve(rhs,h,BC,ng,N,LaP)
 	% solve the Poisson equation:   d^2 solution / dx^2 + d^2 solution/dy^2 = rhs
 	% Numerically, this equation results in a matrix inversion:
 	% A_ij solution_j = rhs_i
@@ -18,31 +18,37 @@ function solution = poissonSolve(rhs,h,BC,ng,N,A)
 	
 	% make the vector f that defines our right hand side	
 	%
-	% equivalent to
-        % f = (h^2)*reshape(rhs(ng+1:ng+N,ng+1:ng+N),N^2,1);   
-	bigM = N^2;
-	for i=1:N; for j=1:N
-		m(i,j) = i + (j-1)*N;
-		Mlookup( m(i,j), :) = [i,j];	
-	end; end
-	for Midx = 1:bigM
-		idx = Mlookup(Midx,:);
-		i = idx(1); j = idx(2);
-		f( Midx,1 ) = (h^2) * rhs(i+ng,j+ng); 
-        end
+	% this is equivalent to
+	%bigM = N^2;
+	%for i=1:N; for j=1:N
+	%	m(i,j) = i + (j-1)*N;
+	%	Mlookup( m(i,j), :) = [i,j];	
+	%end; end
+	%for Midx = 1:bigM
+	%	idx = Mlookup(Midx,:);
+	%	i = idx(1); j = idx(2);
+	%	f( Midx,1 ) = rhs(i+ng,j+ng); 
+        %end
+        f = reshape(rhs(ng+1:ng+N,ng+1:ng+N),N^2,1);   
                                 	           
-	% solve solnVector = A\f using matlab's built-ins
-	solnVector = A\f;
+	% solve the Poisson equation for pressure Ap = f
+	if length(LaP.perp)>0
+		% if we can do the Cholesky decomposition, solve that way
+        	solnVector(LaP.perp) = -LaP.Rp\(LaP.Rp'\f(LaP.perp));
+	else
+		% if not, use matlab's basic linear solve
+		solnVector = -LaP.A\f;
+	end
                                 	           
 	% convert back to x,y,z coordinates
 	%
-	% equivalent to
-        % solution(ng+1:ng+N,ng+1:ng+N) = reshape(solnVector,N,N);
-	for Midx = 1:bigM
-		idx = Mlookup(Midx,:);
-		i = idx(1); j=idx(2);
-		solution(i+ng,j+ng) = solnVector(Midx);
-	end
+	% this is equivalent to
+	%for Midx = 1:bigM
+	%	idx = Mlookup(Midx,:);
+	%	i = idx(1); j=idx(2);
+	%	solution(i+ng,j+ng) = solnVector(Midx);
+	%end
+        solution(ng+1:ng+N,ng+1:ng+N) = reshape(solnVector,N,N);
 
 end
 %--------------------------------------------------------------------------------------------------

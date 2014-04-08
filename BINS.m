@@ -28,7 +28,7 @@ function BINS(N,L,dt,T,BC,IC_choice,nu,ng)
 	[u,v,p] = IC(L,N,ng,IC_choice);
 	[u,v,p] = fillBC(u,v,p,ng,N,BC);
         % define Poisson operator for pressure solution
-	A = make_matrix(N,ng,h,BC);
+	A = make_matrix(N,h,BC);
 
 	t=0;
 	while t < T

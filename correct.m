@@ -98,8 +98,10 @@ function checkDiv(u,v,h,ng,N)
 		disp(sprintf('Maximum divergence is %f \n',maxDiv))
 		
 		% plot divergence;
-		surf(div(ng+1:ng+N,ng+1:ng+N),'edgecolor','none')
-		caxis([-1e-5 1e-5]); colorbar
+                figure()
+		imagesc(div(ng+1:ng+N,ng+1:ng+N))
+                set(gca,'YDir','normal'); 
+		caxis([-1e-8 1e-8]); colorbar
 		title('divergence')
 		view(2)
 		grid off
